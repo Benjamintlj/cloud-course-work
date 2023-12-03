@@ -3,6 +3,7 @@ import * as cdk from "aws-cdk-lib";
 import {EcsStack} from "./ecs-stack";
 import {VpcStack} from "./vpc-stack";
 import {genericLambdaStack} from "./generic-lambda-stack";
+import {StorageStack} from "./storage-stack";
 
 
 export class AppStage extends cdk.Stage {
@@ -17,10 +18,14 @@ export class AppStage extends cdk.Stage {
             vpc: vpcStack.vpc,
         });
 
+        // create s3 bucket
+        const storageStack = new StorageStack(this, 'CloudCourseWorkStorageStack', {});
+
         // create lambdas
-        const tripMgrStack = new genericLambdaStack(this, 'tripMgrStack', {
+        const tripMgrStack = new genericLambdaStack(this, 'CloudCourseWorkTripMgrStack', {
             name: 'tripMgr',
-            assetPath: 'src/tripMgr/out/tripMgr.zip',
+            s3Bucket: storageStack.lambdaBucket,
+            s3Key: 'tripMgr.zip',
         });
     }
 }

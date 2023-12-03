@@ -18,7 +18,8 @@ source venv/bin/activate
 pip freeze > requirements.txt
 ```
 
-### Prepare and zip lambda
+### Prepare and push zip lambda to s3
 ```bash
-zip -r out/tripMgr.zip src/* 
+zip -r out/tripMgr.zip src/*
+aws s3 cp out/tripMgr.zip s3://prod-cloudcourseworkstor-cloudcourseworklambdabuc-ocdtc3iwmdvh/tripMgr.zip
 ```
