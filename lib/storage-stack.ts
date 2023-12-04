@@ -11,7 +11,7 @@ export class StorageStack extends cdk.Stack {
 
         this.lambdaBucket = new S3.Bucket(this, 'cloudCourseWorkLambdaBucket', {
             versioned: false,
-            removalPolicy: cdk.RemovalPolicy.DESTROY
+            removalPolicy: cdk.RemovalPolicy.RETAIN
         });
     }
 }

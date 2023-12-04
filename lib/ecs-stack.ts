@@ -36,7 +36,7 @@ export class EcsStack extends cdk.Stack {
         const taskDefinition = new ecs.Ec2TaskDefinition(this, 'cloudCourseTaskDef');
 
         // Create environment variables from the SQS queue URLs
-        const sqsEnvironment: Record<string, string>  = {};
+        const sqsEnvironment: Record<string, string> = {};
         for (const [key, url] of Object.entries(props.sqsQueues)) {
             sqsEnvironment[key] = url;
         }
