@@ -8,7 +8,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 
 interface EcsStackProps extends cdk.StackProps {
     vpc: ec2.Vpc;
-    sqsQueues: { [key: string]: string };
+    environmentVariables: { [key: string]: string };
 }
 
 export class EcsStack extends cdk.Stack {
@@ -35,17 +35,28 @@ export class EcsStack extends cdk.Stack {
         // Create a task definition and expose port 80
         const taskDefinition = new ecs.Ec2TaskDefinition(this, 'cloudCourseTaskDef');
 
-        // Create environment variables from the SQS queue URLs
-        const sqsEnvironment: Record<string, string> = {};
-        for (const [key, url] of Object.entries(props.sqsQueues)) {
-            sqsEnvironment[key] = url;
+        // Create an IAM role for ECS tasks
+        const ecsTaskRole = new iam.Role(this, 'EcsTaskRole', {
+            assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
+            description: 'Role ECS to communicate with AWS services',
+        });
+
+        ecsTaskRole.addToPolicy(new iam.PolicyStatement({
+            actions: ['lambda:InvokeFunction'],
+            resources: ['*'], // no need to restrict to specific lambdas
+        }));
+
+        // Create environment variables from props
+        const environmentVariables: Record<string, string> = {};
+        for (const [key, url] of Object.entries(props.environmentVariables)) {
+            environmentVariables[key] = url;
         }
 
         // Add container to task definition
         const container = taskDefinition.addContainer('cloudCourseContainer', {
             image: ecs.ContainerImage.fromEcrRepository(repository, 'latest'),
             memoryLimitMiB: 256,
-            environment: sqsEnvironment,
+            environment: environmentVariables,
         });
 
         container.addPortMappings({

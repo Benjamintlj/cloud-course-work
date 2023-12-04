@@ -26,8 +26,8 @@ export class AppStage extends cdk.Stage {
         // create ecs, load balancer, and auto-scaling cluster
         const ecsStack = new EcsStack(this, 'CloudCourseWorkEcsStack', {
             vpc: vpcStack.vpc,
-            sqsQueues: {
-                "tripMgrQueue": tripMgrStack.sqsQueue.queueUrl,
+            environmentVariables: {
+                'TRIP_MGR_ARN': tripMgrStack.lambdaFunction.functionArn,
             }
         });
     }
