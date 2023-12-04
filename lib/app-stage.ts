@@ -28,7 +28,10 @@ export class AppStage extends cdk.Stage {
             vpc: vpcStack.vpc,
             environmentVariables: {
                 'TRIP_MGR_ARN': tripMgrStack.lambdaFunction.functionArn,
-            }
+            },
+            lambda_resources: [
+                tripMgrStack.lambdaFunction
+            ]
         });
     }
 }

@@ -4,11 +4,12 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as ecr from "aws-cdk-lib/aws-ecr";
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2'; // Import ELBv2 for Application Load Balancer
-import * as iam from 'aws-cdk-lib/aws-iam';
+import * as lambda from "aws-cdk-lib/aws-lambda";
 
 interface EcsStackProps extends cdk.StackProps {
     vpc: ec2.Vpc;
     environmentVariables: { [key: string]: string };
+    lambda_resources: [lambda.Function];
 }
 
 export class EcsStack extends cdk.Stack {
@@ -34,17 +35,6 @@ export class EcsStack extends cdk.Stack {
 
         // Create a task definition and expose port 80
         const taskDefinition = new ecs.Ec2TaskDefinition(this, 'cloudCourseTaskDef');
-
-        // Create an IAM role for ECS tasks
-        const ecsTaskRole = new iam.Role(this, 'EcsTaskRole', {
-            assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
-            description: 'Role ECS to communicate with AWS services',
-        });
-
-        ecsTaskRole.addToPolicy(new iam.PolicyStatement({
-            actions: ['lambda:InvokeFunction'],
-            resources: ['*'], // no need to restrict to specific lambdas
-        }));
 
         // Create environment variables from props
         const environmentVariables: Record<string, string> = {};
@@ -81,5 +71,10 @@ export class EcsStack extends cdk.Stack {
                 containerPort: 80
             })]
         });
+
+        // Grant permissions
+        for (const lambda_function of props.lambda_resources) {
+            lambda_function.grantInvoke(taskDefinition.taskRole);
+        }
     }
 }
