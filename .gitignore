@@ -7,6 +7,12 @@ node_modules
 src/ecs/venv
 src/tripMgr/venv
 
+# ignore pycache
+__pycache__/
+
+# sam
+.aws-sam/
+
 # CDK asset staging directory
 .cdk.staging
 cdk.out

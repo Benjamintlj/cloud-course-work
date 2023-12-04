@@ -13,19 +13,22 @@ export class AppStage extends cdk.Stage {
         // create vpc
         const vpcStack = new VpcStack(this, 'CloudCourseWorkVpcStack', {})
 
-        // create ecs, load balancer, and auto-scaling cluster
-        const ecsStack = new EcsStack(this, 'CloudCourseWorkEcsStack', {
-            vpc: vpcStack.vpc,
-        });
-
         // create s3 bucket
         const storageStack = new StorageStack(this, 'CloudCourseWorkStorageStack', {});
 
         // create lambdas
         const tripMgrStack = new genericLambdaStack(this, 'CloudCourseWorkTripMgrStack', {
-            name: 'tripMgr',
+            name: 'CloudCourseWorkTripMgr',
             s3Bucket: storageStack.lambdaBucket,
             s3Key: 'tripMgr.zip',
+        });
+
+        // create ecs, load balancer, and auto-scaling cluster
+        const ecsStack = new EcsStack(this, 'CloudCourseWorkEcsStack', {
+            vpc: vpcStack.vpc,
+            sqsQueues: {
+                "tripMgrQueue": tripMgrStack.sqsQueue.queueUrl,
+            }
         });
     }
 }

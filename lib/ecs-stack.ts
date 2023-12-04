@@ -4,9 +4,11 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as ecr from "aws-cdk-lib/aws-ecr";
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2'; // Import ELBv2 for Application Load Balancer
+import * as iam from 'aws-cdk-lib/aws-iam';
 
 interface EcsStackProps extends cdk.StackProps {
     vpc: ec2.Vpc;
+    sqsQueues: { [key: string]: string };
 }
 
 export class EcsStack extends cdk.Stack {
@@ -33,9 +35,17 @@ export class EcsStack extends cdk.Stack {
         // Create a task definition and expose port 80
         const taskDefinition = new ecs.Ec2TaskDefinition(this, 'cloudCourseTaskDef');
 
+        // Create environment variables from the SQS queue URLs
+        const sqsEnvironment: Record<string, string>  = {};
+        for (const [key, url] of Object.entries(props.sqsQueues)) {
+            sqsEnvironment[key] = url;
+        }
+
+        // Add container to task definition
         const container = taskDefinition.addContainer('cloudCourseContainer', {
             image: ecs.ContainerImage.fromEcrRepository(repository, 'latest'),
             memoryLimitMiB: 256,
+            environment: sqsEnvironment,
         });
 
         container.addPortMappings({
