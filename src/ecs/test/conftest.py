@@ -1,6 +1,6 @@
 import pytest
-from unittest.mock import Mock
 import boto3
+import src.main as main
 
 
 @pytest.fixture(scope="function")
@@ -11,12 +11,6 @@ def aws_credentials():
 
 
 # set environment variables
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def mock_env(monkeypatch):
-    monkeypatch.setenv('DYNAMO_TABLE', 'test_table')
-
-
-@pytest.fixture(scope="function")
-def lambda_context():
-    """Mocked Lambda context."""
-    return Mock()
+    monkeypatch.setenv('TRIP_MGR_ARN', 'lambda_arn')
