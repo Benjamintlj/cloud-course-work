@@ -21,6 +21,7 @@ export class AppStage extends cdk.Stage {
             name: 'CloudCourseWorkTripMgr',
             s3Bucket: storageStack.lambdaBucket,
             s3Key: 'tripMgr.zip',
+            dynamoTable: storageStack.masterDynamoDbTable,
         });
 
         // create ecs, load balancer, and auto-scaling cluster

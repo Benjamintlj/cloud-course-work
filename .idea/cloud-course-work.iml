@@ -1,15 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="WEB_MODULE" version="4">
   <component name="NewModuleRootManager">
-    <content url="file://$MODULE_DIR$">
+    <content url="file://$MODULE_DIR$/lib" />
+    <content url="file://$MODULE_DIR$/src/ecs">
       <sourceFolder url="file://$MODULE_DIR$/src/ecs/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/ecs/test" isTestSource="true" />
+    </content>
+    <content url="file://$MODULE_DIR$/src/tripMgr">
       <sourceFolder url="file://$MODULE_DIR$/src/tripMgr/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/tripMgr/test" isTestSource="true" />
-      <excludeFolder url="file://$MODULE_DIR$/.tmp" />
-      <excludeFolder url="file://$MODULE_DIR$/temp" />
-      <excludeFolder url="file://$MODULE_DIR$/tmp" />
+      <excludeFolder url="file://$MODULE_DIR$/src/tripMgr/out" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.9 (cloud-course-work)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+  <component name="PackageRequirementsSettings">
+    <option name="requirementsPath" value="$MODULE_DIR$/src/tripMgr/requirements.txt" />
   </component>
 </module>

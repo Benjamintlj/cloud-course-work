@@ -1,7 +1,7 @@
 import pytest
-from moto import mock_sqs
 from unittest.mock import Mock
 import boto3
+import os
 
 
 @pytest.fixture(scope="function")
@@ -11,12 +11,10 @@ def aws_credentials():
                                 aws_session_token="testing")
 
 
-@pytest.fixture(scope="function")
-def sqs(aws_credentials):
-    with mock_sqs():
-        sqs = boto3.client('sqs', region_name='eu-west-1')
-        sqs.create_queue(QueueName='CloudCourseWorkTripMgrQueue')
-        yield sqs
+# set environment variables
+@pytest.fixture
+def mock_env(monkeypatch):
+    monkeypatch.setenv('DYNAMO_TABLE', 'test_table')
 
 
 @pytest.fixture(scope="function")
