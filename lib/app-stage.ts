@@ -24,14 +24,23 @@ export class AppStage extends cdk.Stage {
             dynamoTable: storageStack.masterDynamoDbTable,
         });
 
+        const accountMgrStack = new genericLambdaStack(this, 'CloudCourseWorkAccountMgrStack', {
+            name: 'CloudCourseWorkAccountMgr',
+            s3Bucket: storageStack.lambdaBucket,
+            s3Key: 'accountMgr.zip',
+            dynamoTable: storageStack.masterDynamoDbTable,
+        });
+
         // create ecs, load balancer, and auto-scaling cluster
         const ecsStack = new EcsStack(this, 'CloudCourseWorkEcsStack', {
             vpc: vpcStack.vpc,
             environmentVariables: {
                 'TRIP_MGR_ARN': tripMgrStack.lambdaFunction.functionArn,
+                'ACCOUNT_MGR_ARN': accountMgrStack.lambdaFunction.functionArn,
             },
             lambda_resources: [
-                tripMgrStack.lambdaFunction
+                tripMgrStack.lambdaFunction,
+                accountMgrStack.lambdaFunction
             ]
         });
     }

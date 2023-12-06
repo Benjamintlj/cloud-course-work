@@ -9,7 +9,7 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 interface EcsStackProps extends cdk.StackProps {
     vpc: ec2.Vpc;
     environmentVariables: { [key: string]: string };
-    lambda_resources: [lambda.Function];
+    lambda_resources: lambda.Function[];
 }
 
 export class EcsStack extends cdk.Stack {
