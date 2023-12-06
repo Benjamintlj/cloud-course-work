@@ -21,14 +21,14 @@ export class AppStage extends cdk.Stage {
             name: 'CloudCourseWorkTripMgr',
             s3Bucket: storageStack.lambdaBucket,
             s3Key: 'tripMgr.zip',
-            dynamoTable: storageStack.masterDynamoDbTable,
+            dynamoTable: storageStack.tripsDynamoDbTable,
         });
 
         const accountMgrStack = new genericLambdaStack(this, 'CloudCourseWorkAccountMgrStack', {
             name: 'CloudCourseWorkAccountMgr',
             s3Bucket: storageStack.lambdaBucket,
             s3Key: 'accountMgr.zip',
-            dynamoTable: storageStack.masterDynamoDbTable,
+            dynamoTable: storageStack.usersDynamoDbTable,
         });
 
         // create ecs, load balancer, and auto-scaling cluster
