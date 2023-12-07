@@ -14,6 +14,7 @@ def aws_credentials():
 @pytest.fixture
 def mock_env(monkeypatch):
     monkeypatch.setenv('DYNAMO_TABLE', 'test_table')
+    monkeypatch.setenv('DLQ_QUEUE_URL', 'test_queue_url')
 
 
 @pytest.fixture(scope="function")

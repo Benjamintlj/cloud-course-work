@@ -1,5 +1,5 @@
 from fastapi.testclient import TestClient
-from src.index import app
+from src.main import app
 from unittest.mock import patch, MagicMock
 import json
 import os

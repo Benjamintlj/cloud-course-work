@@ -29,9 +29,10 @@ export class genericLambdaStack extends cdk.Stack {
         // create lambda
         this.lambdaFunction = new lambda.Function(this, props.name, {
             runtime: lambda.Runtime.PYTHON_3_9,
-            handler: 'src/index.main',
+            handler: 'index.main',
             code: lambda.Code.fromBucket(props.s3Bucket, props.s3Key),
             timeout: cdk.Duration.seconds(10),
+            architecture: lambda.Architecture.ARM_64,
             environment: {
                 'DYNAMO_TABLE': props.dynamoTable ? props.dynamoTable.tableName : '',
                 'DLQ_QUEUE_URL': dlq.queueUrl,

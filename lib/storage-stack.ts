@@ -5,24 +5,23 @@ import * as DynamoDB from "aws-cdk-lib/aws-dynamodb";
 
 export class StorageStack extends cdk.Stack {
 
-    readonly lambdaBucket: S3.Bucket;
     readonly usersDynamoDbTable: DynamoDB.Table;
     readonly tripsDynamoDbTable: DynamoDB.Table;
-    readonly masterDynamoDbTable: DynamoDB.Table;
+    readonly lambdaBucket: S3.IBucket;
 
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
         super(scope, id, props);
 
-        // TODO: set this to the existing S3 bucket
-        this.lambdaBucket = new S3.Bucket(this, 'cloudCourseWorkLambdaBucket', {
-            versioned: false,
-            removalPolicy: cdk.RemovalPolicy.RETAIN
-        });
+        this.lambdaBucket = S3.Bucket.fromBucketArn(
+            this, 
+            'cloudCourseWorkLambdaBucket', 
+            'arn:aws:s3:::prod-cloudcourseworkstor-cloudcourseworklambdabuc-p2uc3m8jxde9'
+        );
 
         // Create a Users DynamoDB table
         this.usersDynamoDbTable = new DynamoDB.Table(this, 'cloudCourseWorkUsersDynamoDbTable', {
             partitionKey: {
-                name: 'userId',
+                name: 'user_id',
                 type: DynamoDB.AttributeType.NUMBER
             },
         });
@@ -39,7 +38,7 @@ export class StorageStack extends cdk.Stack {
         // Create a Trips DynamoDB table
         this.tripsDynamoDbTable = new DynamoDB.Table(this, 'cloudCourseWorkTripsDynamoDbTable', {
             partitionKey: {
-                name: 'tripId',
+                name: 'trip_id',
                 type: DynamoDB.AttributeType.NUMBER
             },
             sortKey: {

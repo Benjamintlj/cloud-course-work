@@ -1,5 +1,6 @@
-from .put import put
+from .post import post_create_user
 import boto3
+import os
 
 
 def main(event, context):
@@ -12,8 +13,8 @@ def main(event, context):
 
     response = None
 
-    if http_method == 'PUT':
-        response = put(event, table)
+    if http_method == 'POST':
+        response = post_create_user(event, table)
 
     return response if response else {
         'statusCode': 400,

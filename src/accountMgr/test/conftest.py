@@ -11,10 +11,11 @@ def aws_credentials():
 
 
 # set environment variables
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def mock_env(monkeypatch):
     monkeypatch.setenv('DYNAMO_TABLE', 'test_table')
     monkeypatch.setenv('DLQ_QUEUE_URL', 'test_queue_url')
+    monkeypatch.setenv('TEST_ENV', 'True')
 
 
 @pytest.fixture(scope="function")
