@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="WEB_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$/lib">
+      <excludeFolder url="file://$MODULE_DIR$/lib/src/ecs/venv" />
+      <excludeFolder url="file://$MODULE_DIR$/lib/src/ecs" />
+    </content>
+    <content url="file://$MODULE_DIR$/src/accountMgr">
+      <sourceFolder url="file://$MODULE_DIR$/src/accountMgr/src" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/src/accountMgr/test" isTestSource="true" />
+      <excludeFolder url="file://$MODULE_DIR$/src/accountMgr/venv" />
+      <excludeFolder url="file://$MODULE_DIR$/src/accountMgr/out" />
+    </content>
+    <content url="file://$MODULE_DIR$/src/ecs">
+      <sourceFolder url="file://$MODULE_DIR$/src/ecs/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/ecs/test" isTestSource="true" />
+      <excludeFolder url="file://$MODULE_DIR$/src/ecs/venv" />
+    </content>
+    <content url="file://$MODULE_DIR$/src/tripMgr">
+      <sourceFolder url="file://$MODULE_DIR$/src/tripMgr/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/tripMgr/test" isTestSource="true" />
+      <excludeFolder url="file://$MODULE_DIR$/src/tripMgr/out" />
+      <excludeFolder url="file://$MODULE_DIR$/src/tripMgr/venv" />
+      <excludeFolder url="file://$MODULE_DIR$/src/tripMgr/.pytest_cache" />
+    </content>
+    <orderEntry type="jdk" jdkName="Python 3.9 (accountMgr)" jdkType="Python SDK" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+  <component name="PackageRequirementsSettings">
+    <option name="requirementsPath" value="$MODULE_DIR$/src/accountMgr/requirments.txt" />
+  </component>
+</module>

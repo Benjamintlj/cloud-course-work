@@ -1,0 +1,21 @@
+*.js
+!jest.config.js
+*.d.ts
+node_modules
+
+# Environment
+src/ecs/venv
+src/tripMgr/venv
+
+# ignore pycache
+__pycache__/
+
+# ignore packages
+src/accountMgr/package
+
+# sam
+.aws-sam/
+
+# CDK asset staging directory
+.cdk.staging
+cdk.out
