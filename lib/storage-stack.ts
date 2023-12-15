@@ -40,10 +40,6 @@ export class StorageStack extends cdk.Stack {
             partitionKey: {
                 name: 'trip_id',
                 type: DynamoDB.AttributeType.NUMBER
-            },
-            sortKey: {
-                name: 'start_date',
-                type: DynamoDB.AttributeType.NUMBER
             }
         });
 
