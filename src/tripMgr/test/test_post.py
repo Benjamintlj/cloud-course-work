@@ -203,10 +203,10 @@ class TestLambdaFunction(unittest.TestCase):
         self.assertEqual(response['statusCode'], 400)
 
     @patch('boto3.client')
-    def test_user_wants_to_go_on_trip_boto_core_error(self, mock_boto3_client):
+    def test_user_wants_to_go_on_trip_exception(self, mock_boto3_client):
         mock_dynamodb_client = MagicMock()
         mock_boto3_client.return_value = mock_dynamodb_client
-        mock_dynamodb_client.transact_write_items.side_effect = BotoCoreError()
+        mock_dynamodb_client.transact_write_items.side_effect = Exception("error")
 
         lambda_event = {
             'httpMethod': 'POST',
@@ -221,21 +221,69 @@ class TestLambdaFunction(unittest.TestCase):
 
         response = main(lambda_event, lambda_context)
 
-        expected_response = {'statusCode': 500, 'details': 'BotoCoreError: An unspecified error occurred'}
+        expected_response = {'statusCode': 500, 'details': 'Error: error'}
+        self.assertEqual(response, expected_response)
+
+    ######################################
+    #  user wants to go on trip
+    @patch('boto3.client')
+    def test_user_approval_request_approved(self, mock_boto3_client):
+        mock_dynamodb_client = MagicMock()
+        mock_boto3_client.return_value = mock_dynamodb_client
+
+        mock_transaction_response = {}
+        mock_dynamodb_client.transact_write_items.return_value = mock_transaction_response
+
+        user_id = 1223423
+        trip_id = 4523426
+
+        lambda_event = {
+            'httpMethod': 'POST',
+            'action': 'user_approval',
+            'body': {
+                'user_id': user_id,
+                'trip_id': trip_id,
+                'is_approved': True
+            }
+        }
+
+        lambda_context = {}
+
+        response = main(lambda_event, lambda_context)
+
+        # Should have the update expression since this could be doing anything
+        # Hence no point in having a disapproval version
+        mock_dynamodb_client.transact_write_items.assert_called()
+
+        expected_response = {'statusCode': 200}
         self.assertEqual(response, expected_response)
 
     @patch('boto3.client')
-    def test_user_wants_to_go_on_trip_general_exception(self, mock_boto3_client):
+    def test_user_approval_request_client_error(self, mock_boto3_client):
+        # Mocking DynamoDB client
         mock_dynamodb_client = MagicMock()
         mock_boto3_client.return_value = mock_dynamodb_client
-        mock_dynamodb_client.transact_write_items.side_effect = Exception("General exception")
+
+        # Simulate ClientError
+        mock_dynamodb_client.transact_write_items.side_effect = ClientError({
+            'Error':
+                 {'Code': '400',
+                  'Message': 'Bad Request'
+                  }
+             },
+            'TransactWriteItems'
+        )
+
+        user_id = 1223423
+        trip_id = 4523426
 
         lambda_event = {
             'httpMethod': 'POST',
-            'action': 'user_wants_to_go_on_trip',
+            'action': 'user_approval',
             'body': {
-                'user_id': 1223423,
-                'trip_id': 4523426,
+                'user_id': user_id,
+                'trip_id': trip_id,
+                'is_approved': True
             }
         }
 
@@ -243,5 +291,33 @@ class TestLambdaFunction(unittest.TestCase):
 
         response = main(lambda_event, lambda_context)
 
-        expected_response = {'statusCode': 500, 'details': 'Error: General exception'}
+        self.assertEqual(response['statusCode'], 400)
+
+    @patch('boto3.client')
+    def test_user_approval_request_exception(self, mock_boto3_client):
+        # Mocking DynamoDB client
+        mock_dynamodb_client = MagicMock()
+        mock_boto3_client.return_value = mock_dynamodb_client
+
+        # Simulate a general exception
+        mock_dynamodb_client.transact_write_items.side_effect = Exception("error")
+
+        user_id = 1223423
+        trip_id = 4523426
+
+        lambda_event = {
+            'httpMethod': 'POST',
+            'action': 'user_approval',
+            'body': {
+                'user_id': user_id,
+                'trip_id': trip_id,
+                'is_approved': True
+            }
+        }
+
+        lambda_context = {}
+
+        response = main(lambda_event, lambda_context)
+
+        expected_response = {'statusCode': 500, 'details': 'Error: error'}
         self.assertEqual(response, expected_response)
