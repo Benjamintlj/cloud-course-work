@@ -43,7 +43,9 @@ class TestPost(unittest.TestCase):
         mock_dynamodb_table.put_item.assert_called_with(Item={
             'user_id': user_id,
             'email': email,
-            'password': password
+            'password': password,
+            'awaiting_approval': [],
+            'approved': []
         })
 
         expected_response = {
@@ -117,7 +119,9 @@ class TestPost(unittest.TestCase):
         mock_dynamodb_table.put_item.assert_called_with(Item={
             'user_id': user_id,
             'email': email,
-            'password': password
+            'password': password,
+            'awaiting_approval': [],
+            'approved': []
         })
 
         expected_response = {

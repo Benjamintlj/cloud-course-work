@@ -21,7 +21,7 @@ export class AppStage extends cdk.Stage {
             name: 'CloudCourseWorkTripMgr',
             s3Bucket: storageStack.lambdaBucket,
             s3Key: 'tripMgr.zip',
-            usersDynamodbTable: storageStack.tripsDynamoDbTable,
+            usersDynamodbTable: storageStack.usersDynamoDbTable,
             tripsDynamodbTable: storageStack.tripsDynamoDbTable,
         });
 

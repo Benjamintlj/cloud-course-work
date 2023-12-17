@@ -30,7 +30,9 @@ class TestLambdaFunction(unittest.TestCase):
                 'end_date': end_date,
                 'location': location,
                 'title': title,
-                'description': description
+                'description': description,
+                'awaiting_approval': [],
+                'approved': []
             }
         }
         mock_dynamodb_table.get_item.return_value = mock_response
@@ -135,7 +137,9 @@ class TestLambdaFunction(unittest.TestCase):
                 'end_date': end_date,
                 'location': location,
                 'title': title,
-                'description': description
+                'description': description,
+                'awaiting_approval': [],
+                'approved': []
             }]
         }
         mock_dynamodb_table.query.return_value = mock_response
@@ -243,7 +247,9 @@ class TestLambdaFunction(unittest.TestCase):
                 'end_date': end_date,
                 'location': location,
                 'title': title,
-                'description': description
+                'description': description,
+                'awaiting_approval': [],
+                'approved': []
             }]
         }
         mock_dynamodb_table.query.return_value = mock_response

@@ -33,7 +33,9 @@ def post_create_user(event, table):
         table.put_item(Item={
             __user_id_column__: user_id,
             __email_column__: email,
-            __password_column__: password
+            __password_column__: password,
+            'awaiting_approval': [],
+            'approved': []
         })
 
         response = {

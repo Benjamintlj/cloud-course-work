@@ -1,6 +1,7 @@
 import unittest
-from botocore.exceptions import BotoCoreError
+from botocore.exceptions import BotoCoreError, ClientError
 from src.index import main
+from src.post import user_wants_to_go_on_trip
 from unittest.mock import patch, MagicMock
 
 
@@ -62,7 +63,9 @@ class TestLambdaFunction(unittest.TestCase):
             'end_date': end_date,
             'location': location,
             'title': title,
-            'description': description
+            'description': description,
+            'awaiting_approval': [],
+            'approved': []
         })
 
         # Define the expected response
@@ -138,3 +141,107 @@ class TestLambdaFunction(unittest.TestCase):
 
         self.assertEqual(response['statusCode'], 500)
         self.assertIn('Error: error', response['details'])
+
+    ######################################
+    #  user wants to go on trip
+    @patch('boto3.client')
+    def test_user_wants_to_go_on_trip(self, mock_boto3_client):
+        mock_dynamodb_client = MagicMock()
+        mock_boto3_client.return_value = mock_dynamodb_client
+
+        user_id = 1223423
+        trip_id = 4523426
+
+        mock_transaction_response = {}
+        mock_dynamodb_client.transact_write_items.return_value = mock_transaction_response
+
+        lambda_event = {
+            'httpMethod': 'POST',
+            'action': 'user_wants_to_go_on_trip',
+            'body': {
+                'user_id': user_id,
+                'trip_id': trip_id,
+            }
+        }
+
+        lambda_context = {}
+
+        response = main(lambda_event, lambda_context)
+
+        mock_dynamodb_client.transact_write_items.assert_called()
+
+        expected_response = {
+            'statusCode': 200
+        }
+        self.assertEqual(response, expected_response)
+
+    @patch('boto3.client')
+    def test_user_wants_to_go_on_trip_client_error(self, mock_boto3_client):
+        mock_dynamodb_client = MagicMock()
+        mock_boto3_client.return_value = mock_dynamodb_client
+        error_message = "An error occurred (ValidationException) when calling the TransactWriteItems operation: Unknown"
+        mock_dynamodb_client.transact_write_items.side_effect = ClientError({
+            'Error': {
+                'Code': 'ValidationException',
+                'Message': error_message
+            }
+        }, 'TransactWriteItems')
+
+        lambda_event = {
+            'httpMethod': 'POST',
+            'action': 'user_wants_to_go_on_trip',
+            'body': {
+                'user_id': 1223423,
+                'trip_id': 4523426,
+            }
+        }
+
+        lambda_context = {}
+
+        response = main(lambda_event, lambda_context)
+
+        self.assertEqual(response['statusCode'], 400)
+
+    @patch('boto3.client')
+    def test_user_wants_to_go_on_trip_boto_core_error(self, mock_boto3_client):
+        mock_dynamodb_client = MagicMock()
+        mock_boto3_client.return_value = mock_dynamodb_client
+        mock_dynamodb_client.transact_write_items.side_effect = BotoCoreError()
+
+        lambda_event = {
+            'httpMethod': 'POST',
+            'action': 'user_wants_to_go_on_trip',
+            'body': {
+                'user_id': 1223423,
+                'trip_id': 4523426,
+            }
+        }
+
+        lambda_context = {}
+
+        response = main(lambda_event, lambda_context)
+
+        expected_response = {'statusCode': 500, 'details': 'BotoCoreError: An unspecified error occurred'}
+        self.assertEqual(response, expected_response)
+
+    @patch('boto3.client')
+    def test_user_wants_to_go_on_trip_general_exception(self, mock_boto3_client):
+        mock_dynamodb_client = MagicMock()
+        mock_boto3_client.return_value = mock_dynamodb_client
+        mock_dynamodb_client.transact_write_items.side_effect = Exception("General exception")
+
+        lambda_event = {
+            'httpMethod': 'POST',
+            'action': 'user_wants_to_go_on_trip',
+            'body': {
+                'user_id': 1223423,
+                'trip_id': 4523426,
+            }
+        }
+
+        lambda_context = {}
+
+        response = main(lambda_event, lambda_context)
+
+        expected_response = {'statusCode': 500, 'details': 'Error: General exception'}
+        self.assertEqual(response, expected_response)

@@ -1,14 +1,16 @@
 from .get import get_by_id, get_by_location, get_by_admin_id
-from .post import create_trip
+from .post import create_trip, user_wants_to_go_on_trip
 import boto3
 import os
 
 
 def main(event, context):
     # get DYNAMO_TABLE from environment variable
-    DYNAMO_TABLE = os.environ['TRIPS_DYNAMODB_TABLE']
-    dynamodb = boto3.resource('dynamodb')
-    table = dynamodb.Table(DYNAMO_TABLE)
+    dynamodb_resource = boto3.resource('dynamodb')
+    TRIPS_DYNAMO_TABLE = os.environ['TRIPS_DYNAMODB_TABLE']
+    trips_table = dynamodb_resource.Table(TRIPS_DYNAMO_TABLE)
+    USERS_DYNAMODB_TABLE = os.environ['USERS_DYNAMODB_TABLE']
+    user_table = dynamodb_resource.Table(USERS_DYNAMODB_TABLE)
 
     http_method = event['httpMethod']
     action = event['action']
@@ -17,16 +19,20 @@ def main(event, context):
 
     if http_method == 'GET':
         if action == 'get_trip_info_by_id':
-            response = get_by_id(event, table)
+            response = get_by_id(event, trips_table)
 
         elif action == 'get_trip_info_by_location':
-            response = get_by_location(event, table)
+            response = get_by_location(event, trips_table)
 
         elif action == 'get_trip_info_by_admin_id':
-            response = get_by_admin_id(event, table)
+            response = get_by_admin_id(event, trips_table)
 
     elif http_method == 'POST':
-        response = create_trip(event, table)
+        if action == 'create_trip':
+            response = create_trip(event, trips_table)
+
+        elif action == 'user_wants_to_go_on_trip':
+            response = user_wants_to_go_on_trip(event, TRIPS_DYNAMO_TABLE, USERS_DYNAMODB_TABLE)
 
     return response if response else {
         'statusCode': 400,
