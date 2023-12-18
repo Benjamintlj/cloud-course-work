@@ -171,3 +171,33 @@ def user_approval_request(event, trip_table_name, user_table_name):
         }
 
     return response
+
+
+def user_no_longer_wants_to_attend(event, trip_table_name, user_table_name):
+
+    user_id = str(event['body']['user_id'])
+    trip_id = str(event['body']['trip_id'])
+
+    try:
+        remove_element_from_list(trip_table_name, False, trip_id, user_id, False)
+    except Exception:
+        pass
+
+    try:
+        remove_element_from_list(user_table_name, True, user_id, trip_id, False)
+    except Exception:
+        pass
+
+    try:
+        remove_element_from_list(trip_table_name, False, trip_id, user_id, True)
+    except Exception:
+        pass
+
+    try:
+        remove_element_from_list(user_table_name, True, user_id, trip_id, True)
+    except Exception:
+        pass
+
+    return {
+        'statusCode': 200,
+    }
