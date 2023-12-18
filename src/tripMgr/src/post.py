@@ -116,15 +116,13 @@ def user_approval_request(event, trip_table_name, user_table_name):
         trip_id = str(event['body']['trip_id'])
         is_approved = event['body']['is_approved']
 
+        print('made it here')
         remove_element_from_list(trip_table_name, False, trip_id, user_id, False)
         remove_element_from_list(user_table_name, True, user_id, trip_id, False)
 
-        if is_approved:
-            """
-            1.  user_id in awaiting_approval in trip_table should be moved to approved
-            2.  trip_id in the awaiting_approval in the user_table should be moved in to the approved column
-            """
+        print('made it here')
 
+        if is_approved:
             transactions = [
                 {
                     'Update': {

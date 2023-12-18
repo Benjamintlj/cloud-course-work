@@ -1,7 +1,6 @@
 import unittest
 from botocore.exceptions import BotoCoreError, ClientError
 from src.index import main
-from src.post import user_wants_to_go_on_trip
 from unittest.mock import patch, MagicMock
 
 
@@ -226,13 +225,11 @@ class TestLambdaFunction(unittest.TestCase):
 
     ######################################
     #  user wants to go on trip
+    @patch('src.post.remove_element_from_list')
     @patch('boto3.client')
-    def test_user_approval_request_approved(self, mock_boto3_client):
+    def test_user_approval_request_approved(self, mock_boto3_client, mock_remove_element):
         mock_dynamodb_client = MagicMock()
         mock_boto3_client.return_value = mock_dynamodb_client
-
-        mock_transaction_response = {}
-        mock_dynamodb_client.transact_write_items.return_value = mock_transaction_response
 
         user_id = 1223423
         trip_id = 4523426
@@ -251,39 +248,32 @@ class TestLambdaFunction(unittest.TestCase):
 
         response = main(lambda_event, lambda_context)
 
-        # Should have the update expression since this could be doing anything
-        # Hence no point in having a disapproval version
+        print(mock_remove_element.call_args_list)
+
+        mock_remove_element.assert_any_call('trip_table', False, str(trip_id), str(user_id), False)
+        mock_remove_element.assert_any_call('user_table', True, str(user_id), str(trip_id), False)
         mock_dynamodb_client.transact_write_items.assert_called()
 
+        # Assert response
         expected_response = {'statusCode': 200}
         self.assertEqual(response, expected_response)
 
+    ######################################
+    # user doesn't want to go on the trip
+    @patch('src.post.remove_element_from_list')
     @patch('boto3.client')
-    def test_user_approval_request_client_error(self, mock_boto3_client):
-        # Mocking DynamoDB client
+    def test_user_no_longer_wants_to_attend(self, mock_boto3_client, mock_remove_element):
         mock_dynamodb_client = MagicMock()
         mock_boto3_client.return_value = mock_dynamodb_client
 
-        # Simulate ClientError
-        mock_dynamodb_client.transact_write_items.side_effect = ClientError({
-            'Error':
-                 {'Code': '400',
-                  'Message': 'Bad Request'
-                  }
-             },
-            'TransactWriteItems'
-        )
-
-        user_id = 1223423
-        trip_id = 4523426
-
+        user_id = 1234567
+        trip_id = 7654321
         lambda_event = {
             'httpMethod': 'POST',
-            'action': 'user_approval',
+            'action': 'user_no_longer_wants_to_attend',
             'body': {
                 'user_id': user_id,
-                'trip_id': trip_id,
-                'is_approved': True
+                'trip_id': trip_id
             }
         }
 
@@ -291,33 +281,11 @@ class TestLambdaFunction(unittest.TestCase):
 
         response = main(lambda_event, lambda_context)
 
-        self.assertEqual(response['statusCode'], 400)
+        mock_remove_element.assert_any_call('trip_table', False, str(trip_id), str(user_id), False)
+        mock_remove_element.assert_any_call('user_table', True, str(user_id), str(trip_id), False)
+        mock_remove_element.assert_any_call('trip_table', False, str(trip_id), str(user_id), True)
+        mock_remove_element.assert_any_call('user_table', True, str(user_id), str(trip_id), True)
 
-    @patch('boto3.client')
-    def test_user_approval_request_exception(self, mock_boto3_client):
-        # Mocking DynamoDB client
-        mock_dynamodb_client = MagicMock()
-        mock_boto3_client.return_value = mock_dynamodb_client
-
-        # Simulate a general exception
-        mock_dynamodb_client.transact_write_items.side_effect = Exception("error")
-
-        user_id = 1223423
-        trip_id = 4523426
-
-        lambda_event = {
-            'httpMethod': 'POST',
-            'action': 'user_approval',
-            'body': {
-                'user_id': user_id,
-                'trip_id': trip_id,
-                'is_approved': True
-            }
-        }
-
-        lambda_context = {}
-
-        response = main(lambda_event, lambda_context)
-
-        expected_response = {'statusCode': 500, 'details': 'Error: error'}
+        # Assert response
+        expected_response = {'statusCode': 200}
         self.assertEqual(response, expected_response)

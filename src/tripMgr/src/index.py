@@ -43,7 +43,7 @@ def main(event, context):
 
     elif http_method == 'DELETE':
         if action == 'delete_trip':
-            response == delete_trip(event, trips_table, TRIPS_DYNAMO_TABLE, USERS_DYNAMODB_TABLE)
+            response = delete_trip(event, trips_table, TRIPS_DYNAMO_TABLE, USERS_DYNAMODB_TABLE)
 
     return response if response else {
         'statusCode': 400,
