@@ -1,6 +1,5 @@
 from boto3.dynamodb.conditions import Key
 from botocore.exceptions import BotoCoreError
-from .column_names import __user_id_column__, __email_column__, __email_index__, __password_column__
 import requests
 
 
@@ -17,8 +16,8 @@ def email_exists(email, table):
 
     try:
         response = table.query(
-            IndexName=__email_index__,
-            KeyConditionExpression=Key(__email_column__).eq(email)
+            IndexName='email-index',
+            KeyConditionExpression=Key('email').eq(email)
         )
 
         if len(response['Items']) is 0:
@@ -45,8 +44,8 @@ def get_email_item(email, table):
 
     try:
         response = table.query(
-            IndexName=__email_index__,
-            KeyConditionExpression=Key(__email_column__).eq(email)
+            IndexName='email-index',
+            KeyConditionExpression=Key('email').eq(email)
         )
         print(response)
 
@@ -59,9 +58,9 @@ def get_email_item(email, table):
             result = {
                 "statusCode": 200,
                 "body": {
-                    __user_id_column__: response['Items'][0][__user_id_column__],
-                    __email_column__: response['Items'][0][__email_column__],
-                    __password_column__: response['Items'][0][__password_column__]
+                    'user_id': response['Items'][0]['user_id'],
+                    'email': response['Items'][0]['email'],
+                    'password': response['Items'][0]['password']
                 }
             }
 
@@ -88,7 +87,7 @@ def user_id_exists(user_id, table):
     try:
         response = table.get_item(
             Key={
-                __user_id_column__: user_id
+                'user_id': user_id
             }
         )
 

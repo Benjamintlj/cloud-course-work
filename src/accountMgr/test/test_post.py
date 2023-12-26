@@ -1,11 +1,9 @@
 import unittest
 from unittest.mock import patch
 from src.index import main
-from src.column_names import __email_column__, __password_column__, __user_id_column__
 from botocore.exceptions import BotoCoreError
 
 
-# TODO: update columns
 class TestPost(unittest.TestCase):
 
     @patch('boto3.resource')
@@ -177,9 +175,9 @@ class TestPost(unittest.TestCase):
         mock_get_email_item.return_value = {
             'statusCode': 200,
             'body': {
-                __user_id_column__: user_id,
-                __email_column__: email,
-                __password_column__: password
+                'user_id': user_id,
+                'email': email,
+                'password': password
             }
         }
 
@@ -187,8 +185,8 @@ class TestPost(unittest.TestCase):
             'httpMethod': 'POST',
             'action': 'login',
             'body': {
-                __email_column__: email,
-                __password_column__: password
+                'email': email,
+                'password': password
             },
         }
 
@@ -201,14 +199,14 @@ class TestPost(unittest.TestCase):
         expected_response = {
             'statusCode': 200,
             'body': {
-                __user_id_column__: user_id,
+                'user_id': user_id,
             }
         }
         self.assertEqual(response, expected_response)
     
     @patch('boto3.resource')
     @patch('src.post.get_email_item')
-    def test_post_login(self, mock_get_email_item, mock_boto3_resource):
+    def test_post_login_incorrect_password(self, mock_get_email_item, mock_boto3_resource):
         user_id = 12848983912
         email = 'test@example.com'
         password = 'password123'
@@ -218,9 +216,9 @@ class TestPost(unittest.TestCase):
         mock_get_email_item.return_value = {
             'statusCode': 200,
             'body': {
-                __user_id_column__: user_id,
-                __email_column__: email,
-                __password_column__: different_password
+                'user_id': user_id,
+                'email': email,
+                'password': different_password
             }
         }
 
@@ -228,8 +226,8 @@ class TestPost(unittest.TestCase):
             'httpMethod': 'POST',
             'action': 'login',
             'body': {
-                __email_column__: email,
-                __password_column__: password
+                'email': email,
+                'password': password
             },
         }
 
@@ -262,8 +260,8 @@ class TestPost(unittest.TestCase):
             'httpMethod': 'POST',
             'action': 'login',
             'body': {
-                __email_column__: email,
-                __password_column__: password
+                'email': email,
+                'password': password
             },
         }
 
@@ -297,8 +295,8 @@ class TestPost(unittest.TestCase):
             'httpMethod': 'POST',
             'action': 'login',
             'body': {
-                __email_column__: email,
-                __password_column__: password
+                'email': email,
+                'password': password
             },
         }
 

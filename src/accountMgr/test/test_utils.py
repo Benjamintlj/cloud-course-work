@@ -1,7 +1,6 @@
 import unittest
 from unittest.mock import patch, MagicMock
 from src.utils import email_exists, user_id_exists, get_new_user_id, get_email_item
-from src.column_names import __email_column__, __password_column__, __user_id_column__, __email_index__
 from boto3.dynamodb.conditions import Key
 from botocore.exceptions import BotoCoreError
 
@@ -21,8 +20,8 @@ class TestUtils(unittest.TestCase):
         response = email_exists(email, mock_table)
 
         mock_table.query.assert_called_once_with(
-            IndexName=__email_index__,
-            KeyConditionExpression=Key(__email_column__).eq(email)
+            IndexName='email-index',
+            KeyConditionExpression=Key('email').eq(email)
         )
 
         assert response is False
@@ -42,8 +41,8 @@ class TestUtils(unittest.TestCase):
         response = email_exists(email, mock_table)
 
         mock_table.query.assert_called_once_with(
-            IndexName=__email_index__,
-            KeyConditionExpression=Key(__email_column__).eq(email)
+            IndexName='email-index',
+            KeyConditionExpression=Key('email').eq(email)
         )
 
         assert response is True
@@ -55,9 +54,9 @@ class TestUtils(unittest.TestCase):
         mock_table = mock_boto3_resource.return_value.Table
         mock_table.query.return_value = {
             'Items': [{
-                __user_id_column__: 12848983912,
-                __email_column__: 'example@email.com',
-                __password_column__: 'password123!'
+                'user_id': 12848983912,
+                'email': 'example@email.com',
+                'password': 'password123!'
             }]
         }
 
@@ -66,16 +65,16 @@ class TestUtils(unittest.TestCase):
         response = get_email_item(email, mock_table)
 
         mock_table.query.assert_called_once_with(
-            IndexName=__email_index__,
-            KeyConditionExpression=Key(__email_column__).eq(email)
+            IndexName='email-index',
+            KeyConditionExpression=Key('email').eq(email)
         )
 
         expected_response = {
             'statusCode': 200,
             'body': {
-                __user_id_column__: 12848983912,
-                __email_column__: 'example@email.com',
-                __password_column__: 'password123!'
+                'user_id': 12848983912,
+                'email': 'example@email.com',
+                'password': 'password123!'
             }
         }
 
@@ -94,8 +93,8 @@ class TestUtils(unittest.TestCase):
         response = get_email_item(email, mock_table)
 
         mock_table.query.assert_called_once_with(
-            IndexName=__email_index__,
-            KeyConditionExpression=Key(__email_column__).eq(email)
+            IndexName='email-index',
+            KeyConditionExpression=Key('email').eq(email)
         )
 
         expected_response = {
@@ -115,8 +114,8 @@ class TestUtils(unittest.TestCase):
         response = get_email_item(email, mock_table)
 
         mock_table.query.assert_called_once_with(
-            IndexName=__email_index__,
-            KeyConditionExpression=Key(__email_column__).eq(email)
+            IndexName='email-index',
+            KeyConditionExpression=Key('email').eq(email)
         )
 
         expected_response = {
@@ -137,8 +136,8 @@ class TestUtils(unittest.TestCase):
         response = email_exists(email, mock_table)
 
         mock_table.query.assert_called_once_with(
-            IndexName=__email_index__,
-            KeyConditionExpression=Key(__email_column__).eq(email)
+            IndexName='email-index',
+            KeyConditionExpression=Key('email').eq(email)
         )
 
         assert response is True
@@ -155,7 +154,7 @@ class TestUtils(unittest.TestCase):
 
         mock_table.get_item.assert_called_once_with(
             Key={
-                __user_id_column__: user_id,
+                'user_id': user_id,
             }
         )
 
@@ -177,7 +176,7 @@ class TestUtils(unittest.TestCase):
 
         mock_table.get_item.assert_called_once_with(
             Key={
-                __user_id_column__: user_id,
+                'user_id': user_id,
             }
         )
 
@@ -195,7 +194,7 @@ class TestUtils(unittest.TestCase):
 
         mock_table.get_item.assert_called_once_with(
             Key={
-                __user_id_column__: user_id,
+                'user_id': user_id,
             }
         )
 
