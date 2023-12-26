@@ -9,6 +9,13 @@ docker run -p 4003:80 -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCE
 ```
 It will be running on [localhost:4003](http://localhost:4003/).
 
+### Run the project locally
+```bash
+export TRIP_MGR_ARN="arn:aws:lambda:eu-west-1:203163753194:function:prod-CloudCourseWorkTripM-CloudCourseWorkTripMgr2C-eLL8llBozOko"
+export USER_MGR_ARN="arn:aws:lambda:eu-west-1:203163753194:function:prod-CloudCourseWorkAccou-CloudCourseWorkAccountMg-hUGTc4n0SnjO"
+uvicorn src.main:app --host=0.0.0.0 --port=80
+```
+
 ### Create the environment
 
 

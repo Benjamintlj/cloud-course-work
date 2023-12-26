@@ -1,0 +1,299 @@
+from fastapi import HTTPException, Depends
+from typing import Optional
+import json
+import logging
+from pydantic import BaseModel
+from .utils import call_trip_mgr
+from .auth_route_dependency import authenticate_request
+
+
+class CreateTripRequest(BaseModel):
+    start_date: int
+    end_date: int
+    location: str
+    title: str
+    description: str
+
+
+class UserWantsToGoOnTripRequest(BaseModel):
+    trip_id: int
+
+
+class UserApproval(BaseModel):
+    trip_id: int
+    is_approved: bool
+    user_id_to_update: int
+
+
+class UserNoLongerWantsToAttend(BaseModel):
+    trip_id: int
+
+
+class DeleteTripRequest(BaseModel):
+    trip_id: int
+
+
+def verify_current_user_is_admin(user_id, trip_id, lambda_client):
+    verify_payload = json.dumps({
+        'httpMethod': 'GET',
+        'action': 'get_trip_info_by_id',
+        'body': {
+            'trip_id': trip_id
+        }
+    })
+
+    verify_response_payload = call_trip_mgr(lambda_client, verify_payload)
+
+    if user_id != verify_response_payload['body']['admin_id'] \
+            and 200 == verify_response_payload['statusCode']:
+        raise HTTPException(status_code=401, detail='Not authorised to make the change')
+
+
+def trip_mgr(app, lambda_client):
+    @app.post('/trip')
+    async def create_trip(request: CreateTripRequest, user_id=Depends(authenticate_request)):
+        response = None
+
+        try:
+            payload = json.dumps({
+                'httpMethod': 'POST',
+                'action': 'create_trip',
+                'body': {
+                    'admin_id': user_id,
+                    'start_date': request.start_date,
+                    'end_date': request.end_date,
+                    'location': request.location,
+                    'title': request.title,
+                    'description': request.description
+                }
+            })
+
+            response_payload = call_trip_mgr(lambda_client, payload)
+
+            status_code = response_payload['statusCode']
+
+            if status_code == 200:
+                response = {
+                    'statusCode': 200,
+                    'body': 'Trip created successfully'
+                }
+            else:
+                logging.error('error while creating trip returned non-201 response: ' + str(response_payload))
+                raise HTTPException(status_code=500, detail='Error while creating user non-201 response')
+
+        except HTTPException as http_exception:
+            raise http_exception
+        except Exception as e:
+            logging.error('invoking trip_mgr: ' + str(e))
+            raise HTTPException(status_code=500, detail=str(e))
+
+        return response
+
+    @app.get('/trips')
+    async def get_trips(trip_id: Optional[int] = None,
+                        location: Optional[str] = None,
+                        admin_id: Optional[int] = None,
+                        user_id=Depends(authenticate_request)):
+        response = None
+
+        try:
+            payload = None
+
+            if trip_id is not None:
+                payload = json.dumps({
+                    'httpMethod': 'GET',
+                    'action': 'get_trip_info_by_id',
+                    'body': {
+                        'trip_id': trip_id
+                    }
+                })
+            elif location is not None:
+                payload = json.dumps({
+                    'httpMethod': 'GET',
+                    'action': 'get_trip_info_by_location',
+                    'body': {
+                        'location': location
+                    }
+                })
+            elif admin_id is not None:
+                print(admin_id)
+                payload = json.dumps({
+                    'httpMethod': 'GET',
+                    'action': 'get_trip_info_by_admin_id',
+                    'body': {
+                        'admin_id': admin_id
+                    }
+                })
+            else:
+                HTTPException(status_code=400, detail='trip_id, location or admin_id not provided')
+
+            response_payload = call_trip_mgr(lambda_client, payload)
+
+            status_code = response_payload['statusCode']
+
+            if status_code == 200:
+                response = {
+                    'statusCode': 200,
+                    'body': response_payload['body']
+                }
+            else:
+                logging.error('error while getting trip returned non-201 response: ' + str(response_payload))
+                raise HTTPException(status_code=500, detail='Error while getting trip non-201 response')
+
+        except HTTPException as http_exception:
+            raise http_exception
+        except Exception as e:
+            logging.error('invoking trip_mgr: ' + str(e))
+            raise HTTPException(status_code=500, detail=str(e))
+
+        return response
+
+    @app.post('/user-wants-to-go-on-trip')
+    async def user_wants_to_go_on_trip(request: UserWantsToGoOnTripRequest, user_id=Depends(authenticate_request)):
+        response = None
+
+        try:
+            payload = json.dumps({
+                'httpMethod': 'POST',
+                'action': 'user_wants_to_go_on_trip',
+                'body': {
+                    'user_id': user_id,
+                    'trip_id': request.trip_id
+                }
+            })
+
+            response_payload = call_trip_mgr(lambda_client, payload)
+
+            status_code = response_payload['statusCode']
+
+            if status_code == 200:
+                response = {
+                    'statusCode': 200,
+                }
+            elif status_code == 400:
+                HTTPException(status_code=400,
+                              detail='Transaction failed, likely caused by user already being in table')
+            else:
+                logging.error('error while updating trip returned non-201 response: ' + str(response_payload))
+                raise HTTPException(status_code=500, detail='Error while getting trip non-201 response')
+
+        except HTTPException as http_exception:
+            raise http_exception
+        except Exception as e:
+            logging.error('invoking trip_mgr: ' + str(e))
+            raise HTTPException(status_code=500, detail=str(e))
+
+        return response
+
+    @app.post('/user-approval')
+    async def user_approval(request: UserApproval, user_id=Depends(authenticate_request)):
+        response = None
+
+        try:
+            verify_current_user_is_admin(user_id, request.trip_id, lambda_client)
+
+            payload = json.dumps({
+                'httpMethod': 'POST',
+                'action': 'user_approval',
+                'body': {
+                    'user_id': request.user_id_to_update,
+                    'trip_id': request.trip_id,
+                    'is_approved': request.is_approved
+                }
+            })
+
+            response_payload = call_trip_mgr(lambda_client, payload)
+
+            status_code = response_payload['statusCode']
+
+            if status_code == 200:
+                response = {
+                    'statusCode': 200,
+                }
+            elif status_code == 400:
+                HTTPException(status_code=400,
+                              detail='Transaction failed')
+            else:
+                logging.error('error while updating trip returned non-201 response: ' + str(response_payload))
+                raise HTTPException(status_code=500, detail='Error while getting trip non-201 response')
+
+        except HTTPException as http_exception:
+            raise http_exception
+        except Exception as e:
+            logging.error('invoking trip_mgr: ' + str(e))
+            raise HTTPException(status_code=500, detail=str(e))
+
+        return response
+
+    @app.post('/user-no-longer-wants-to-attend')
+    async def user_no_longer_wants_to_attend(request: UserNoLongerWantsToAttend, user_id=Depends(authenticate_request)):
+        response = None
+
+        try:
+            payload = json.dumps({
+                'httpMethod': 'POST',
+                'action': 'user_no_longer_wants_to_attend',
+                'body': {
+                    'user_id': user_id,
+                    'trip_id': request.trip_id,
+                }
+            })
+
+            response_payload = call_trip_mgr(lambda_client, payload)
+
+            status_code = response_payload['statusCode']
+
+            if status_code == 200:
+                response = {
+                    'statusCode': 200,
+                }
+            else:
+                logging.error('error while updating trip returned non-201 response: ' + str(response_payload))
+                raise HTTPException(status_code=500, detail='Error while getting trip non-201 response')
+
+        except HTTPException as http_exception:
+            raise http_exception
+        except Exception as e:
+            logging.error('invoking trip_mgr: ' + str(e))
+            raise HTTPException(status_code=500, detail=str(e))
+
+        return response
+
+    @app.delete('/trip')
+    async def delete_trip(request: DeleteTripRequest, user_id=Depends(authenticate_request)):
+        response = None
+
+        try:
+            verify_current_user_is_admin(user_id, request.trip_id, lambda_client)
+
+            payload = json.dumps({
+                'httpMethod': 'DELETE',
+                'action': 'delete_trip',
+                'body': {
+                    'trip_id': request.trip_id,
+                }
+            })
+
+            response_payload = call_trip_mgr(lambda_client, payload)
+            print(response_payload)
+
+            status_code = response_payload['statusCode']
+
+            if status_code == 200:
+                response = {
+                    'statusCode': 200,
+                }
+            elif status_code == 400:
+                HTTPException(status_code=400,
+                              detail='Transaction failed')
+            else:
+                logging.error('error while deleting trip returned non-201 response: ' + str(response_payload))
+                raise HTTPException(status_code=500, detail='Error while deleting trip non-201 response')
+
+        except HTTPException as http_exception:
+            raise http_exception
+        except Exception as e:
+            logging.error('invoking trip_mgr: ' + str(e))
+            raise HTTPException(status_code=500, detail=str(e))
+
+        return response

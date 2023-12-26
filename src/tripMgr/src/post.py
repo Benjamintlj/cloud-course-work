@@ -116,11 +116,8 @@ def user_approval_request(event, trip_table_name, user_table_name):
         trip_id = str(event['body']['trip_id'])
         is_approved = event['body']['is_approved']
 
-        print('made it here')
         remove_element_from_list(trip_table_name, False, trip_id, user_id, False)
         remove_element_from_list(user_table_name, True, user_id, trip_id, False)
-
-        print('made it here')
 
         if is_approved:
             transactions = [

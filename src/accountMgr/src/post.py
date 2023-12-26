@@ -68,7 +68,6 @@ def post_login(event, table):
     500 for internal error
     """
     response = None
-    print(event)
     account_entry = get_email_item(event['body']['email'], table)
 
     if account_entry['statusCode'] == 200:
@@ -82,7 +81,7 @@ def post_login(event, table):
         else:
             response = {
                 'statusCode': 401,
-                'Error': 'Incorrect password'
+                'body': 'Incorrect password'
             }
     else:
         response = account_entry

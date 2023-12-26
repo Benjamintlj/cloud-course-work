@@ -239,7 +239,7 @@ class TestPost(unittest.TestCase):
 
         expected_response = {
             'statusCode': 401,
-            'Error': 'Incorrect password'
+            'body': 'Incorrect password'
         }
         self.assertEqual(response, expected_response)
 
