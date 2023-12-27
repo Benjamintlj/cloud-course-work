@@ -124,7 +124,7 @@ def account_mgr(app, lambda_client):
         is_user_removed = AuthTokenMgr().remove_token(user_id)
 
         content = {
-            'isUserRemoved': is_user_removed
+            'isUserRemovedFromTokenTable': is_user_removed
         }
 
         return JSONResponse(status_code=200, content=content)

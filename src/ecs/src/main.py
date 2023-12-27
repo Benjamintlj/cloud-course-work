@@ -5,8 +5,6 @@ from .trip_mgr import trip_mgr
 from .weather_mgr import weather_mgr
 from .image_mgr import image_mgr
 from .utils import get_secrets
-from .auth_token_mgr import AuthTokenMgr
-
 
 # Get secrets
 get_secrets()

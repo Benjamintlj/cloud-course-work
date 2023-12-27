@@ -2,9 +2,6 @@
 
 ### How to run the project locally
 ```bash
-export TRIP_MGR_ARN="arn:aws:lambda:eu-west-1:203163753194:function:prod-CloudCourseWorkTripM-CloudCourseWorkTripMgr2C-eLL8llBozOko"
-export USER_MGR_ARN="arn:aws:lambda:eu-west-1:203163753194:function:prod-CloudCourseWorkAccou-CloudCourseWorkAccountMg-hUGTc4n0SnjO"
-
 docker build -t cloud-course-work-ecs-image . 
 docker run -p 4003:80 --env-file .env -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION cloud-course-work-ecs-image
 ```
@@ -14,6 +11,7 @@ It will be running on [localhost:4003](http://localhost:4003/).
 ```bash
 export TRIP_MGR_ARN="arn:aws:lambda:eu-west-1:203163753194:function:prod-CloudCourseWorkTripM-CloudCourseWorkTripMgr2C-eLL8llBozOko"
 export USER_MGR_ARN="arn:aws:lambda:eu-west-1:203163753194:function:prod-CloudCourseWorkAccou-CloudCourseWorkAccountMg-hUGTc4n0SnjO"
+export TOKEN_DYNAMODB_TABLE="prod-CloudCourseWorkStorageStack-cloudCourseWorkTokensDynamoDbTableE313728A-SV35MP511AZK"
 uvicorn src.main:app --host=0.0.0.0 --port=80
 ```
 
@@ -26,6 +24,7 @@ pip freeze > requirements.txt
 ```
 
 ### Push to ECR
+_**NOTE: DO NOT INCLUDE THE `.env` FILE!!!**_
 ```bash
 docker build -t cloud-course-work-ecs-image . 
 aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin 203163753194.dkr.ecr.eu-west-1.amazonaws.com

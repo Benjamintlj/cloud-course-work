@@ -6,7 +6,7 @@ def authenticate_request(request: Request):
     headers = request.headers
 
     user_id = int(headers.get('User-Id'))
-    authorization = int(headers.get('Authorization'))
+    authorization = headers.get('Authorization')
 
     if not AuthTokenMgr().is_token_valid(user_id, authorization):
         raise HTTPException(status_code=401, detail='Invalid authorization code or user_id')
