@@ -10,7 +10,7 @@ export class AppStage extends cdk.Stage {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
         super(scope, id, props);
 
-        // create vpc
+        // // create vpc
         // const vpcStack = new VpcStack(this, 'CloudCourseWorkVpcStack', {})
 
         // create s3 bucket
@@ -36,9 +36,11 @@ export class AppStage extends cdk.Stage {
         // // create ecs, load balancer, and auto-scaling cluster
         // const ecsStack = new EcsStack(this, 'CloudCourseWorkEcsStack', {
         //     vpc: vpcStack.vpc,
+        //     tokenDynamoDbTable: storageStack.tokensDynamoDbTable,
         //     environmentVariables: {
         //         'TRIP_MGR_ARN': tripMgrStack.lambdaFunction.functionArn,
         //         'ACCOUNT_MGR_ARN': accountMgrStack.lambdaFunction.functionArn,
+        //         'TOKEN_DYNAMODB_TABLE': storageStack.tokensDynamoDbTable.tableName,
         //     },
         //     lambda_resources: [
         //         tripMgrStack.lambdaFunction,

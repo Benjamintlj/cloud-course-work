@@ -3,6 +3,7 @@ import {Construct} from "constructs";
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as ecr from "aws-cdk-lib/aws-ecr";
+import * as DynamoDB from "aws-cdk-lib/aws-dynamodb";
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2'; // Import ELBv2 for Application Load Balancer
 import * as lambda from "aws-cdk-lib/aws-lambda";
 
@@ -10,6 +11,7 @@ interface EcsStackProps extends cdk.StackProps {
     vpc: ec2.Vpc;
     environmentVariables: { [key: string]: string };
     lambda_resources: lambda.Function[];
+    tokenDynamoDbTable: DynamoDB.Table;
 }
 
 export class EcsStack extends cdk.Stack {
@@ -76,5 +78,7 @@ export class EcsStack extends cdk.Stack {
         for (const lambda_function of props.lambda_resources) {
             lambda_function.grantInvoke(taskDefinition.taskRole);
         }
+
+        props.tokenDynamoDbTable.grantReadWriteData(taskDefinition.taskRole);
     }
 }
