@@ -10,7 +10,7 @@ def create_trip(event, table):
     :param event: event passed to lambda
     :param table: pointing to the trips table
 
-    :return 200 if create was successful
+    :return 201 if create was successful
     500 if create failed
     """
 
@@ -32,7 +32,7 @@ def create_trip(event, table):
         })
 
         response = {
-            'statusCode': 200
+            'statusCode': 201
         }
     except BotoCoreError as e:
         response = {

@@ -2,26 +2,26 @@ from fastapi import FastAPI
 import boto3
 from .account_mgr import account_mgr
 from .trip_mgr import trip_mgr
+from .weather_mgr import weather_mgr
+from .image_mgr import image_mgr
+from .utils import get_secrets
 from .auth_token_mgr import AuthTokenMgr
 
-app = FastAPI()
 
+# Get secrets
+get_secrets()
+
+# Create client
 lambda_client = boto3.client('lambda', region_name='eu-west-1')
 
-        payload = json.dumps({
-            'httpMethod': 'GET',
-            'pk': pk,
-            'sk': sk
-        })
+# Init the app
+app = FastAPI()
 
-        # Invoke the trip_mgr
-        response = lambda_client.invoke(
-            FunctionName=os.getenv('TRIP_MGR_ARN'),
-            InvocationType='RequestResponse',
-            Payload=payload
-        )
-        logging.error(" invoked trip_mgr: " + str(response))
-
+# Set endpoints
 account_mgr(app, lambda_client)
 
 trip_mgr(app, lambda_client)
+
+weather_mgr(app, lambda_client)
+
+image_mgr(app, lambda_client)
