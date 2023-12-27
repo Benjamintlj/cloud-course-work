@@ -2,6 +2,8 @@ from fastapi import HTTPException
 import os
 import json
 import logging
+from datetime import datetime
+import time
 
 
 def handle_lambda_response(lambda_response):
@@ -33,3 +35,11 @@ def call_trip_mgr(lambda_client, payload):
     )
 
     return handle_lambda_response(lambda_response)
+
+
+def convert_unix_to_datetime(unix_time):
+    return datetime.utcfromtimestamp(unix_time).strftime('%Y-%m-%d:%H')
+
+
+def convert_datetime_to_unix(dt):
+    return int(time.mktime(dt.timetuple()))

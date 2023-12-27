@@ -69,7 +69,7 @@ class TestLambdaFunction(unittest.TestCase):
 
         # Define the expected response
         expected_response = {
-            'statusCode': 200
+            'statusCode': 201
         }
 
         # Assert the response

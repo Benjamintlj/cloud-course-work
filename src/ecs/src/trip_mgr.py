@@ -1,4 +1,5 @@
 from fastapi import HTTPException, Depends
+from fastapi.responses import JSONResponse
 from typing import Optional
 import json
 import logging
@@ -52,7 +53,7 @@ def verify_current_user_is_admin(user_id, trip_id, lambda_client):
 def trip_mgr(app, lambda_client):
     @app.post('/trip')
     async def create_trip(request: CreateTripRequest, user_id=Depends(authenticate_request)):
-        response = None
+        content = None
 
         try:
             payload = json.dumps({
@@ -72,11 +73,8 @@ def trip_mgr(app, lambda_client):
 
             status_code = response_payload['statusCode']
 
-            if status_code == 200:
-                response = {
-                    'statusCode': 200,
-                    'body': 'Trip created successfully'
-                }
+            if status_code == 201:
+                pass
             else:
                 logging.error('error while creating trip returned non-201 response: ' + str(response_payload))
                 raise HTTPException(status_code=500, detail='Error while creating user non-201 response')
@@ -87,14 +85,14 @@ def trip_mgr(app, lambda_client):
             logging.error('invoking trip_mgr: ' + str(e))
             raise HTTPException(status_code=500, detail=str(e))
 
-        return response
+        return JSONResponse(status_code=201, content=content)
 
     @app.get('/trips')
     async def get_trips(trip_id: Optional[int] = None,
                         location: Optional[str] = None,
                         admin_id: Optional[int] = None,
                         user_id=Depends(authenticate_request)):
-        response = None
+        content = None
 
         try:
             payload = None
@@ -132,10 +130,7 @@ def trip_mgr(app, lambda_client):
             status_code = response_payload['statusCode']
 
             if status_code == 200:
-                response = {
-                    'statusCode': 200,
-                    'body': response_payload['body']
-                }
+                content = response_payload['body']
             else:
                 logging.error('error while getting trip returned non-201 response: ' + str(response_payload))
                 raise HTTPException(status_code=500, detail='Error while getting trip non-201 response')
@@ -146,11 +141,11 @@ def trip_mgr(app, lambda_client):
             logging.error('invoking trip_mgr: ' + str(e))
             raise HTTPException(status_code=500, detail=str(e))
 
-        return response
+        return JSONResponse(status_code=200, content=content)
 
     @app.post('/user-wants-to-go-on-trip')
     async def user_wants_to_go_on_trip(request: UserWantsToGoOnTripRequest, user_id=Depends(authenticate_request)):
-        response = None
+        content = None
 
         try:
             payload = json.dumps({
@@ -167,9 +162,7 @@ def trip_mgr(app, lambda_client):
             status_code = response_payload['statusCode']
 
             if status_code == 200:
-                response = {
-                    'statusCode': 200,
-                }
+                pass
             elif status_code == 400:
                 HTTPException(status_code=400,
                               detail='Transaction failed, likely caused by user already being in table')
@@ -183,11 +176,11 @@ def trip_mgr(app, lambda_client):
             logging.error('invoking trip_mgr: ' + str(e))
             raise HTTPException(status_code=500, detail=str(e))
 
-        return response
+        return JSONResponse(status_code=200, content=content)
 
     @app.post('/user-approval')
     async def user_approval(request: UserApproval, user_id=Depends(authenticate_request)):
-        response = None
+        content = None
 
         try:
             verify_current_user_is_admin(user_id, request.trip_id, lambda_client)
@@ -207,9 +200,7 @@ def trip_mgr(app, lambda_client):
             status_code = response_payload['statusCode']
 
             if status_code == 200:
-                response = {
-                    'statusCode': 200,
-                }
+                pass
             elif status_code == 400:
                 HTTPException(status_code=400,
                               detail='Transaction failed')
@@ -223,11 +214,11 @@ def trip_mgr(app, lambda_client):
             logging.error('invoking trip_mgr: ' + str(e))
             raise HTTPException(status_code=500, detail=str(e))
 
-        return response
+        return JSONResponse(status_code=200, content=content)
 
     @app.post('/user-no-longer-wants-to-attend')
     async def user_no_longer_wants_to_attend(request: UserNoLongerWantsToAttend, user_id=Depends(authenticate_request)):
-        response = None
+        content = None
 
         try:
             payload = json.dumps({
@@ -244,9 +235,7 @@ def trip_mgr(app, lambda_client):
             status_code = response_payload['statusCode']
 
             if status_code == 200:
-                response = {
-                    'statusCode': 200,
-                }
+                pass
             else:
                 logging.error('error while updating trip returned non-201 response: ' + str(response_payload))
                 raise HTTPException(status_code=500, detail='Error while getting trip non-201 response')
@@ -257,11 +246,11 @@ def trip_mgr(app, lambda_client):
             logging.error('invoking trip_mgr: ' + str(e))
             raise HTTPException(status_code=500, detail=str(e))
 
-        return response
+        return JSONResponse(status_code=200, content=content)
 
     @app.delete('/trip')
     async def delete_trip(request: DeleteTripRequest, user_id=Depends(authenticate_request)):
-        response = None
+        content = None
 
         try:
             verify_current_user_is_admin(user_id, request.trip_id, lambda_client)
@@ -275,14 +264,11 @@ def trip_mgr(app, lambda_client):
             })
 
             response_payload = call_trip_mgr(lambda_client, payload)
-            print(response_payload)
 
             status_code = response_payload['statusCode']
 
             if status_code == 200:
-                response = {
-                    'statusCode': 200,
-                }
+                pass
             elif status_code == 400:
                 HTTPException(status_code=400,
                               detail='Transaction failed')
@@ -296,4 +282,4 @@ def trip_mgr(app, lambda_client):
             logging.error('invoking trip_mgr: ' + str(e))
             raise HTTPException(status_code=500, detail=str(e))
 
-        return response
+        return JSONResponse(status_code=200, content=content)

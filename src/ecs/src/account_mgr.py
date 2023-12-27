@@ -1,4 +1,5 @@
 from fastapi import HTTPException, Depends, Request
+from fastapi.responses import JSONResponse
 import json
 import logging
 from pydantic import BaseModel
@@ -36,7 +37,7 @@ def account_mgr(app, lambda_client):
         email = request.email
         password = request.password
 
-        response = None
+        content = None
 
         try:
             payload = json.dumps({
@@ -53,10 +54,7 @@ def account_mgr(app, lambda_client):
             status_code = response_payload['statusCode']
 
             if status_code == 201:
-                response = {
-                    'statusCode': 201,
-                    'body': 'User created successfully'
-                }
+                pass
             elif status_code == 400:
                 raise HTTPException(status_code=400, detail='User already exists')
             else:
@@ -69,14 +67,14 @@ def account_mgr(app, lambda_client):
             logging.error('invoking user_mgr: ' + str(e))
             raise HTTPException(status_code=500, detail=str(e))
 
-        return response
+        return JSONResponse(status_code=201, content=content)
 
     @app.post('/login')
     def login(request: LoginRequest):
         email = request.email
         password = request.password
 
-        response = None
+        content = None
 
         try:
             payload = json.dumps({
@@ -95,12 +93,9 @@ def account_mgr(app, lambda_client):
             if status_code == 200:
                 auth_token = AuthTokenMgr().create_token(response_payload['body']['user_id'])
 
-                response = {
-                    'statusCode': 200,
-                    'body': {
-                        'user_id': response_payload['body']['user_id'],
-                        'auth_token': auth_token
-                    }
+                content = {
+                    'user_id': response_payload['body']['user_id'],
+                    'auth_token': auth_token
                 }
             elif status_code == 401:
                 raise HTTPException(status_code=401, detail='Incorrect password')
@@ -120,19 +115,16 @@ def account_mgr(app, lambda_client):
             logging.error('invoking user_mgr: ' + str(e))
             raise HTTPException(status_code=500, detail=str(e))
 
-        return response
+        return JSONResponse(status_code=200, content=content)
 
     @app.post('/sign-out')
     async def sign_out(user_id=Depends(authenticate_request)):
-        response = None
+        content = None
 
         is_user_removed = AuthTokenMgr().remove_token(user_id)
 
-        response = {
-            'statusCode': 200,
-            'body': {
-                'isUserRemoved': is_user_removed
-            }
+        content = {
+            'isUserRemoved': is_user_removed
         }
 
-        return response
+        return JSONResponse(status_code=200, content=content)
