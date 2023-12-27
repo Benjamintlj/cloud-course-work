@@ -1,5 +1,5 @@
+import boto3
 from boto3.dynamodb.conditions import Key
-from botocore.exceptions import BotoCoreError
 import requests
 
 
@@ -102,9 +102,87 @@ def user_id_exists(user_id, table):
     return result
 
 
+def pop_user_id_cache(table):
+    try:
+        response = table.get_item(Key={'user_id': 0})
+        item = response.get('Item', {})
+        cached_user_ids = item.get('cached_user_ids', [])
+
+        if not cached_user_ids:
+            raise Exception('No user_id available to pop')
+
+        user_id = cached_user_ids[0]
+
+    except Exception as e:
+        raise Exception('Failed to read user_id')
+
+    try:
+        table.update_item(
+            Key={'user_id': 0},
+            UpdateExpression='REMOVE cached_user_ids[0]',
+            ReturnValues='UPDATED_NEW'
+        )
+    except Exception as e:
+        raise Exception('Failed to remove user_id')
+
+    return user_id
+
+
+def generate_cached_user_id(table):
+    random_min = 100000000000
+    random_max = 999999999999
+    url = f'https://csrng.net/csrng/csrng.php?min={random_min}&max={random_max}'
+    cached_user_id_entry = 0
+
+    try:
+        response = requests.get(url)
+        data = response.json()
+
+        if data[0]['status'] != 'success':
+            raise ValueError('API response status is not success')
+
+        user_id = data[0]['random']
+
+        if not user_id_exists(user_id, table):
+            table.update_item(
+                Key={'user_id': cached_user_id_entry},
+                UpdateExpression='SET cached_user_ids = '
+                                 'list_append(if_not_exists(cached_user_ids, :empty_list), :num)',
+                ExpressionAttributeValues={
+                    ':num': [user_id],
+                    ':empty_list': [],
+                    ':val': user_id
+                },
+                ConditionExpression='NOT contains (cached_user_ids, :val)',
+                ReturnValues='UPDATED_NEW'
+            )
+
+    except requests.exceptions.RequestException as e:
+        raise ConnectionError(f'Failed to establish a new connection: {e}')
+
+    except ValueError as e:
+        raise ValueError(f'Error processing API response: {e}')
+
+    return {
+        'statusCode': 200
+    }
+
+
+def len_cached_user_ids(table):
+    try:
+        response = table.get_item(Key={'user_id': 0})
+    except Exception as e:
+        raise Exception('Failed to read cached user_ids')
+
+    if 'Item' in response and 'cached_user_ids' in response['Item']:
+        return len(response['Item']['cached_user_ids'])
+    else:
+        return 0
+
+
 def get_new_user_id(table):
     """
-    calls an external api to get a new user id
+    calls an external api to get a new user id, it will also update the user_id cache
 
     :param table: the table to check against
 
@@ -118,6 +196,9 @@ def get_new_user_id(table):
     random_max = 100000000000
     url = f"https://csrng.net/csrng/csrng.php?min={random_min}&max={random_max}"
     attempts = 0
+
+    if len_cached_user_ids(table) < 5:
+        generate_cached_user_id(table)
 
     while attempts < 3:
         try:
@@ -133,8 +214,8 @@ def get_new_user_id(table):
                 return user_id
 
         except requests.exceptions.RequestException as e:
-            # Handle exceptions related to the package library
-            raise ConnectionError(f"Failed to establish a new connection: {e}")
+            # handle a bad connection
+            return pop_user_id_cache(table)
 
         except ValueError as e:
             raise ValueError(f"Error processing API response: {e}")

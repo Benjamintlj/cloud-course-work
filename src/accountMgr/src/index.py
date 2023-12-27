@@ -1,4 +1,4 @@
-from .post import post_create_user, post_login
+from .post import post_create_user, post_login, post_cache_user_ids
 import boto3
 import os
 
@@ -11,11 +11,18 @@ def main(event, context):
 
     response = None
 
-    if event['httpMethod'] == 'POST':
-        if event['action'] == 'create_user':
-            response = post_create_user(event, table)
-        elif event['action'] == 'login':
-            response = post_login(event, table)
+    try:
+        if event['httpMethod'] == 'POST':
+            if event['action'] == 'create_user':
+                response = post_create_user(event, table)
+            elif event['action'] == 'login':
+                response = post_login(event, table)
+
+    except Exception as e:
+        response = {
+            'statusCode': 500,
+            'body': 'Exception: ' + str(e)
+        }
 
     return response if response else {
         'statusCode': 400,

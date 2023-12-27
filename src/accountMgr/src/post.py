@@ -1,6 +1,7 @@
 from botocore.exceptions import BotoCoreError
 from .utils import email_exists, get_new_user_id, get_email_item
 
+
 def post_create_user(event, table):
     """
     creates a new user
