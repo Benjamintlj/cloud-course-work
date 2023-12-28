@@ -74,6 +74,9 @@ def account_mgr(app, lambda_client):
         email = request.email
         password = request.password
 
+        print(email)
+        print(password)
+
         content = None
 
         try:

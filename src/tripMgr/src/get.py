@@ -87,3 +87,30 @@ def get_by_admin_id(event, table):
         }
 
     return response
+
+
+def get_all_trips(table):
+    response = None
+
+    try:
+        # Scan the table - Note that this will read the entire table.
+        dynamo_response = table.scan()
+
+        response = {
+            'statusCode': 200,
+            'body': dynamo_response['Items']  # 'Items' will contain all the records
+        }
+
+    except BotoCoreError as e:
+        response = {
+            'statusCode': 500,
+            'details': 'BotoCoreError: ' + str(e)
+        }
+
+    except Exception as e:
+        response = {
+            'statusCode': 500,
+            'details': 'Error: ' + str(e)
+        }
+
+    return response

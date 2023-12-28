@@ -114,7 +114,6 @@ def trip_mgr(app, lambda_client):
                     }
                 })
             elif admin_id is not None:
-                print(admin_id)
                 payload = json.dumps({
                     'httpMethod': 'GET',
                     'action': 'get_trip_info_by_admin_id',
@@ -123,7 +122,10 @@ def trip_mgr(app, lambda_client):
                     }
                 })
             else:
-                HTTPException(status_code=400, detail='trip_id, location or admin_id not provided')
+                payload = json.dumps({
+                    'httpMethod': 'GET',
+                    'action': 'get_all_trips'
+                })
 
             response_payload = call_trip_mgr(lambda_client, payload)
 
