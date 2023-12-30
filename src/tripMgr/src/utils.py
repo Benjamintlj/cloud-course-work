@@ -48,3 +48,22 @@ def remove_element_from_list(table_name, is_user_table, lookup_id, element_to_re
     # TODO: this should raise an exception that causes a 400 error
     raise Exception("User was not in the awaiting approval / approved list")
 
+
+# This code was copied from:
+# https://stackoverflow.com/questions/32712675/formatting-dynamodb-data-to-normal-json-in-aws-lambda
+def parse_dynamo_value(val):
+    if 'S' in val:
+        return val['S']
+    elif 'N' in val:
+        return int(val['N'])
+    elif 'L' in val:
+        return [parse_dynamo_value(i) for i in val['L']]
+
+
+# This code was copied from:
+# https://stackoverflow.com/questions/32712675/formatting-dynamodb-data-to-normal-json-in-aws-lambda
+def parse_dynamo_item(item):
+    parsed_item = {}
+    for key, val in item.items():
+        parsed_item[key] = parse_dynamo_value(val)
+    return parsed_item
