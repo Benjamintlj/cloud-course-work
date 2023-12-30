@@ -299,3 +299,55 @@ def trip_mgr(app, lambda_client):
             raise HTTPException(status_code=500, detail=str(e))
 
         return JSONResponse(status_code=200, content=content)
+
+    @app.post('/user-denied')
+    async def user_no_longer_wants_to_attend(request: UserDenied, admin_id=Depends(authenticate_request)):
+        content = None
+
+        try:
+            # Get the admin id of the trip in question and validate request
+            get_trip_payload = json.dumps({
+                'httpMethod': 'GET',
+                'action': 'get_trip_info_by_id',
+                'body': {
+                    'trip_id': request.trip_id
+                }
+            })
+
+            trip_payload = call_trip_mgr(lambda_client, get_trip_payload)
+
+            if trip_payload['statusCode'] != 200:
+                raise HTTPException(status_code=500, detail='Failed to get trip')
+
+            if admin_id != trip_payload['body']['admin_id']:
+                print(admin_id)
+                print(trip_payload['body']['admin_id'])
+                raise HTTPException(status_code=401, detail='Not Authorized')
+
+            # Remove user
+            payload = json.dumps({
+                'httpMethod': 'POST',
+                'action': 'remove_user_application',
+                'body': {
+                    'user_id': request.user_id,
+                    'trip_id': request.trip_id,
+                }
+            })
+
+            response_payload = call_trip_mgr(lambda_client, payload)
+
+            status_code = response_payload['statusCode']
+
+            if status_code == 200:
+                pass
+            else:
+                logging.error('error while updating trip returned non-201 response: ' + str(response_payload))
+                raise HTTPException(status_code=500, detail='Error while getting trip non-201 response')
+
+        except HTTPException as http_exception:
+            raise http_exception
+        except Exception as e:
+            logging.error('invoking trip_mgr: ' + str(e))
+            raise HTTPException(status_code=500, detail=str(e))
+
+        return JSONResponse(status_code=200, content=content)
