@@ -168,7 +168,7 @@ def user_approval_request(event, trip_table_name, user_table_name):
     return response
 
 
-def user_no_longer_wants_to_attend(event, trip_table_name, user_table_name):
+def remove_user_application(event, trip_table_name, user_table_name):
 
     user_id = str(event['body']['user_id'])
     trip_id = str(event['body']['trip_id'])

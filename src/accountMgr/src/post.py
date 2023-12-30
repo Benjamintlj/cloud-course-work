@@ -10,7 +10,7 @@ def post_create_user(event, table):
     :param table: table containing the user accounts
 
     :return: 201 if the creation of the user is successful,
-    400 if Email already exists
+    400 if Email already exists,
     500 for internal errors
     """
     response = None
@@ -63,9 +63,9 @@ def post_login(event, table):
     :param event: event passed to lambda
     :param table: table containing the user accounts
 
-    :return 200 & user_id, if login was successful
-    404 if user is not found
-    401 if password is incorrect
+    :return 200 & user_id, if login was successful,
+    404 if user is not found,
+    401 if password is incorrect,
     500 for internal error
     """
     response = None

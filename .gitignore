@@ -3,12 +3,22 @@
 *.d.ts
 node_modules
 
+# DS_Store files
+**/.DS_Store
+
 # Environment
-src/ecs/venv
-src/tripMgr/venv
+**/.venv
+**/.env
+
+# ignore all idea files
+**/.idea
 
 # ignore pycache
 __pycache__/
+
+# ignore all zip files
+*.zip
+out/
 
 # ignore packages
 src/accountMgr/package

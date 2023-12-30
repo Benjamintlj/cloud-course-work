@@ -1,5 +1,5 @@
 from .get import get_by_id, get_by_location, get_by_admin_id, get_all_trips
-from .post import create_trip, user_wants_to_go_on_trip, user_approval_request, user_no_longer_wants_to_attend
+from .post import create_trip, user_wants_to_go_on_trip, user_approval_request, remove_user_application
 from .delete import delete_trip
 import boto3
 import os
@@ -41,8 +41,8 @@ def main(event, context):
         elif action == 'user_approval':
             response = user_approval_request(event, TRIPS_DYNAMO_TABLE, USERS_DYNAMODB_TABLE)
 
-        elif action == 'user_no_longer_wants_to_attend':
-            response = user_no_longer_wants_to_attend(event, TRIPS_DYNAMO_TABLE, USERS_DYNAMODB_TABLE)
+        elif action == 'remove_user_application':
+            response = remove_user_application(event, TRIPS_DYNAMO_TABLE, USERS_DYNAMODB_TABLE)
 
     elif http_method == 'DELETE':
         if action == 'delete_trip':

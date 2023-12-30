@@ -30,6 +30,11 @@ class UserNoLongerWantsToAttend(BaseModel):
     trip_id: int
 
 
+class UserDenied(BaseModel):
+    trip_id: int
+    user_id: int
+
+
 class DeleteTripRequest(BaseModel):
     trip_id: int
 
@@ -56,6 +61,15 @@ def trip_mgr(app, lambda_client):
         content = None
 
         try:
+            # To ensure that dates are safe, 7200 represents two hours and will prevent times being the same in date
+            # ranges for safety when calling weather api
+            two_hours = 7200
+            if (request.start_date + two_hours) > request.end_date:
+                raise HTTPException(status_code=400, detail='Start date must be less than end date')
+            elif request.start_date == request.end_date:
+                # add two hours if they are the same
+                request.end_date += two_hours
+
             payload = json.dumps({
                 'httpMethod': 'POST',
                 'action': 'create_trip',
@@ -86,6 +100,42 @@ def trip_mgr(app, lambda_client):
             raise HTTPException(status_code=500, detail=str(e))
 
         return JSONResponse(status_code=201, content=content)
+
+    @app.delete('/trip')
+    async def delete_trip(request: DeleteTripRequest, user_id=Depends(authenticate_request)):
+        content = None
+
+        try:
+            verify_current_user_is_admin(user_id, request.trip_id, lambda_client)
+
+            payload = json.dumps({
+                'httpMethod': 'DELETE',
+                'action': 'delete_trip',
+                'body': {
+                    'trip_id': request.trip_id,
+                }
+            })
+
+            response_payload = call_trip_mgr(lambda_client, payload)
+
+            status_code = response_payload['statusCode']
+
+            if status_code == 200:
+                pass
+            elif status_code == 400:
+                HTTPException(status_code=400,
+                              detail='Transaction failed')
+            else:
+                logging.error('error while deleting trip returned non-201 response: ' + str(response_payload))
+                raise HTTPException(status_code=500, detail='Error while deleting trip non-201 response')
+
+        except HTTPException as http_exception:
+            raise http_exception
+        except Exception as e:
+            logging.error('invoking trip_mgr: ' + str(e))
+            raise HTTPException(status_code=500, detail=str(e))
+
+        return JSONResponse(status_code=200, content=content)
 
     @app.get('/trips')
     async def get_trips(trip_id: Optional[int] = None,
@@ -225,7 +275,7 @@ def trip_mgr(app, lambda_client):
         try:
             payload = json.dumps({
                 'httpMethod': 'POST',
-                'action': 'user_no_longer_wants_to_attend',
+                'action': 'remove_user_application',
                 'body': {
                     'user_id': user_id,
                     'trip_id': request.trip_id,
@@ -241,42 +291,6 @@ def trip_mgr(app, lambda_client):
             else:
                 logging.error('error while updating trip returned non-201 response: ' + str(response_payload))
                 raise HTTPException(status_code=500, detail='Error while getting trip non-201 response')
-
-        except HTTPException as http_exception:
-            raise http_exception
-        except Exception as e:
-            logging.error('invoking trip_mgr: ' + str(e))
-            raise HTTPException(status_code=500, detail=str(e))
-
-        return JSONResponse(status_code=200, content=content)
-
-    @app.delete('/trip')
-    async def delete_trip(request: DeleteTripRequest, user_id=Depends(authenticate_request)):
-        content = None
-
-        try:
-            verify_current_user_is_admin(user_id, request.trip_id, lambda_client)
-
-            payload = json.dumps({
-                'httpMethod': 'DELETE',
-                'action': 'delete_trip',
-                'body': {
-                    'trip_id': request.trip_id,
-                }
-            })
-
-            response_payload = call_trip_mgr(lambda_client, payload)
-
-            status_code = response_payload['statusCode']
-
-            if status_code == 200:
-                pass
-            elif status_code == 400:
-                HTTPException(status_code=400,
-                              detail='Transaction failed')
-            else:
-                logging.error('error while deleting trip returned non-201 response: ' + str(response_payload))
-                raise HTTPException(status_code=500, detail='Error while deleting trip non-201 response')
 
         except HTTPException as http_exception:
             raise http_exception

@@ -50,7 +50,7 @@ def get_weather(location, start_date, end_date, is_historical):
 
 
 def weather_mgr(app, lambda_client):
-    @app.get('/weather-forcast')
+    @app.get('/weather-forecast')
     async def get_weather_forcast(location: str, start_date: int, end_date: int, user_id=Depends(authenticate_request)):
         return get_weather(location, start_date, end_date, False)
 

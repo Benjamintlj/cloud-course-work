@@ -131,3 +131,42 @@ def account_mgr(app, lambda_client):
         }
 
         return JSONResponse(status_code=200, content=content)
+
+    @app.get('/email')
+    async def get_email(user_id_of_email: int, user_id=Depends(authenticate_request)):
+        content = None
+
+        try:
+            payload = json.dumps({
+                'httpMethod': 'GET',
+                'action': 'get_email',
+                'body': {
+                    'user_id': user_id_of_email,
+                }
+            })
+
+            response_payload = call_account_mgr(lambda_client, payload)
+
+            status_code = response_payload['statusCode']
+
+            if status_code == 200:
+                content = {
+                    'email': response_payload['body']['email'],
+                }
+            elif status_code == 404:
+                raise HTTPException(status_code=404, detail='Unknown userId')
+            elif status_code == 500:
+                logging.error('An error occurred while calling the lambda: ' + str(response_payload))
+                raise HTTPException(status_code=500, detail='Server error occurred')
+            else:
+                logging.error('An error occurred while calling the lambda: ' + str(response_payload))
+                raise HTTPException(status_code=500, detail='Internal error occurred')
+
+        except HTTPException as http_exception:
+            raise http_exception
+
+        except Exception as e:
+            logging.error('invoking user_mgr: ' + str(e))
+            raise HTTPException(status_code=500, detail=str(e))
+
+        return JSONResponse(status_code=200, content=content)
