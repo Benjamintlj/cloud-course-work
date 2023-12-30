@@ -1,5 +1,8 @@
+import os
 from botocore.exceptions import BotoCoreError
 from boto3.dynamodb.conditions import Key
+import boto3
+from .utils import parse_dynamo_item
 
 
 def get_by_id(event, table):
@@ -99,6 +102,55 @@ def get_all_trips(table):
         response = {
             'statusCode': 200,
             'body': dynamo_response['Items']  # 'Items' will contain all the records
+        }
+
+    except BotoCoreError as e:
+        response = {
+            'statusCode': 500,
+            'details': 'BotoCoreError: ' + str(e)
+        }
+
+    except Exception as e:
+        response = {
+            'statusCode': 500,
+            'details': 'Error: ' + str(e)
+        }
+
+    return response
+
+
+def get_all_trips_for_user_id(event, user_table, trips_table):
+    dynamodb = boto3.client('dynamodb')
+
+    response = None
+
+    try:
+        # 1. Get awaiting approval and approved, and append them into one list
+        dynamo_response = user_table.get_item(Key={'user_id': event['body']['user_id']})
+
+        trip_ids = dynamo_response['Item']['approved']
+        trip_ids += dynamo_response['Item']['awaiting_approval']
+
+        # 2. Return a list of all the trip ids
+        keys = [{'trip_id': {'N': str(trip_id)}} for trip_id in trip_ids]
+
+        dynamo_response = dynamodb.batch_get_item(
+            RequestItems={
+                os.environ['TRIPS_DYNAMODB_TABLE']: {
+                    'Keys': keys,
+                    'ConsistentRead': False
+                }
+            }
+        )
+
+        items = dynamo_response['Responses'][os.environ['TRIPS_DYNAMODB_TABLE']]
+        json_items = [parse_dynamo_item(item) for item in items]
+
+        response = {
+            'statusCode': 200,
+            'body': {
+                'items': json_items
+            }
         }
 
     except BotoCoreError as e:

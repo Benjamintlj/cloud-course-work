@@ -18,6 +18,8 @@ pip freeze > requirements.txt
 ```bash
 zip -r out/tripMgr.zip src/* -x __pycache__/
 aws s3 cp out/tripMgr.zip s3://prod-cloudcourseworkstor-cloudcourseworklambdabuc-p2uc3m8jxde9/tripMgr.zip
+aws lambda update-function-code --function-name arn:aws:lambda:eu-west-1:203163753194:function:prod-CloudCourseWorkTripM-CloudCourseWorkTripMgr2C-eLL8llBozOko --s3-bucket prod-cloudcourseworkstor-cloudcourseworklambdabuc-p2uc3m8jxde9 --s3-key tripMgr.zip
+q
 ```
 ```bash
 deactivate

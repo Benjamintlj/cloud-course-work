@@ -1,4 +1,4 @@
-from .get import get_by_id, get_by_location, get_by_admin_id, get_all_trips
+from .get import get_by_id, get_by_location, get_by_admin_id, get_all_trips, get_all_trips_for_user_id
 from .post import create_trip, user_wants_to_go_on_trip, user_approval_request, remove_user_application
 from .delete import delete_trip
 import boto3
@@ -30,6 +30,9 @@ def main(event, context):
 
         elif action == 'get_all_trips':
             response = get_all_trips(trips_table)
+
+        elif action == 'get_all_trips_for_user_id':
+            response = get_all_trips_for_user_id(event, user_table, trips_table)
 
     elif http_method == 'POST':
         if action == 'create_trip':
