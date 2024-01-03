@@ -10,8 +10,8 @@ export class AppStage extends cdk.Stage {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
         super(scope, id, props);
 
-        // // create vpc
-        // const vpcStack = new VpcStack(this, 'CloudCourseWorkVpcStack', {})
+        // create vpc
+        const vpcStack = new VpcStack(this, 'CloudCourseWorkVpcStack', {})
 
         // create s3 bucket
         const storageStack = new StorageStack(this, 'CloudCourseWorkStorageStack', {});
@@ -33,19 +33,19 @@ export class AppStage extends cdk.Stage {
             tripsDynamodbTable: storageStack.tripsDynamoDbTable,
         });
 
-        // // create ecs, load balancer, and auto-scaling cluster
-        // const ecsStack = new EcsStack(this, 'CloudCourseWorkEcsStack', {
-        //     vpc: vpcStack.vpc,
-        //     tokenDynamoDbTable: storageStack.tokensDynamoDbTable,
-        //     environmentVariables: {
-        //         'TRIP_MGR_ARN': tripMgrStack.lambdaFunction.functionArn,
-        //         'ACCOUNT_MGR_ARN': accountMgrStack.lambdaFunction.functionArn,
-        //         'TOKEN_DYNAMODB_TABLE': storageStack.tokensDynamoDbTable.tableName,
-        //     },
-        //     lambda_resources: [
-        //         tripMgrStack.lambdaFunction,
-        //         accountMgrStack.lambdaFunction
-        //     ]
-        // });
+        // create ecs, load balancer, and auto-scaling cluster
+        const ecsStack = new EcsStack(this, 'CloudCourseWorkEcsStack', {
+            vpc: vpcStack.vpc,
+            tokenDynamoDbTable: storageStack.tokensDynamoDbTable,
+            environmentVariables: {
+                'TRIP_MGR_ARN': tripMgrStack.lambdaFunction.functionArn,
+                'ACCOUNT_MGR_ARN': accountMgrStack.lambdaFunction.functionArn,
+                'TOKEN_DYNAMODB_TABLE': storageStack.tokensDynamoDbTable.tableName,
+            },
+            lambda_resources: [
+                tripMgrStack.lambdaFunction,
+                accountMgrStack.lambdaFunction
+            ]
+        });
     }
 }

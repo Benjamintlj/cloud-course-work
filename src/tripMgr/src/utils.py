@@ -45,7 +45,6 @@ def remove_element_from_list(table_name, is_user_table, lookup_id, element_to_re
         else:
             index += 1
 
-    # TODO: this should raise an exception that causes a 400 error
     raise Exception("User was not in the awaiting approval / approved list")
 
 
