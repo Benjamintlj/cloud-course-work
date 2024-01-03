@@ -49,6 +49,18 @@ def remove_element_from_list(table_name, is_user_table, lookup_id, element_to_re
     raise Exception("User was not in the awaiting approval / approved list")
 
 
+def str_to_upper(val):
+    words = val.split()
+
+    new_words = []
+    for word in words:
+        new_word = ''
+        new_word += word[0].upper()
+        new_word += word[1:].lower()
+        new_words.append(new_word)
+
+    return ' '.join(new_words)
+
 # This code was copied from:
 # https://stackoverflow.com/questions/32712675/formatting-dynamodb-data-to-normal-json-in-aws-lambda
 def parse_dynamo_value(val):

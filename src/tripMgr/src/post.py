@@ -1,5 +1,5 @@
 from botocore.exceptions import BotoCoreError, ClientError
-from .utils import create_new_id, remove_element_from_list
+from .utils import create_new_id, remove_element_from_list, str_to_upper
 import boto3
 
 
@@ -18,14 +18,16 @@ def create_trip(event, table):
 
     try:
         uid = create_new_id(table)
+        location_name = str_to_upper(event['body']['location'])
+        title_name = str_to_upper(event['body']['title'])
 
         table.put_item(Item={
             'trip_id': uid,
             'admin_id': event['body']['admin_id'],
             'start_date': event['body']['start_date'],
             'end_date': event['body']['end_date'],
-            'location': event['body']['location'],
-            'title': event['body']['title'],
+            'location': location_name,
+            'title': title_name,
             'description': event['body']['description'],
             'awaiting_approval': [],
             'approved': []

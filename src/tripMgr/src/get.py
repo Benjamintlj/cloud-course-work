@@ -2,7 +2,7 @@ import os
 from botocore.exceptions import BotoCoreError
 from boto3.dynamodb.conditions import Key
 import boto3
-from .utils import parse_dynamo_item
+from .utils import parse_dynamo_item, str_to_upper
 
 
 def get_by_id(event, table):
@@ -11,10 +11,15 @@ def get_by_id(event, table):
     try:
         dynamo_response = table.get_item(Key={'trip_id': event['body']['trip_id']})
 
-        response = {
-            'statusCode': 200,
-            'body': dynamo_response['Item']
-        }
+        if 'Item' in dynamo_response and dynamo_response['Item']:
+            response = {
+                'statusCode': 200,
+                'body': dynamo_response['Item']
+            }
+        else:
+            response = {
+                'statusCode': 404,
+            }
 
     except BotoCoreError as e:
         response = {
@@ -35,16 +40,22 @@ def get_by_location(event, table):
     response = None
 
     try:
-        location = event['body']['location']
+        location = str_to_upper(event['body']['location'])
+
         dynamo_response = table.query(
             IndexName='location-index',
             KeyConditionExpression=Key('location').eq(location)
         )
 
-        response = {
-            'statusCode': 200,
-            'body': dynamo_response.get('Items', [])
-        }
+        if len(dynamo_response.get('Items', [])) > 0:
+            response = {
+                'statusCode': 200,
+                'body': dynamo_response.get('Items', [])
+            }
+        else:
+            response = {
+                'statusCode': 404,
+            }
 
     except BotoCoreError as e:
         response = {
@@ -72,10 +83,15 @@ def get_by_admin_id(event, table):
             KeyConditionExpression=Key('admin_id').eq(admin_id)
         )
 
-        response = {
-            'statusCode': 200,
-            'body': dynamo_response.get('Items', [])
-        }
+        if len(dynamo_response.get('Items', [])) > 0:
+            response = {
+                'statusCode': 200,
+                'body': dynamo_response.get('Items', [])
+            }
+        else:
+            response = {
+                'statusCode': 404,
+            }
 
     except BotoCoreError as e:
         response = {
@@ -105,10 +121,16 @@ def get_all_trips(table):
         }
 
     except BotoCoreError as e:
-        response = {
-            'statusCode': 500,
-            'details': 'BotoCoreError: ' + str(e)
-        }
+        if "Invalid length for parameter" in str(e):
+            response = {
+                'statusCode': 404,
+                'details': 'Invalid parameter: ' + str(e)
+            }
+        else:
+            response = {
+                'statusCode': 500,
+                'details': 'BotoCoreError: ' + str(e)
+            }
 
     except Exception as e:
         response = {
@@ -154,11 +176,16 @@ def get_all_trips_for_user_id(event, user_table, trips_table):
         }
 
     except BotoCoreError as e:
-        response = {
-            'statusCode': 500,
-            'details': 'BotoCoreError: ' + str(e)
-        }
-
+        if "Invalid length for parameter" in str(e):
+            response = {
+                'statusCode': 404,
+                'details': 'Invalid parameter: ' + str(e)
+            }
+        else:
+            response = {
+                'statusCode': 500,
+                'details': 'BotoCoreError: ' + str(e)
+            }
     except Exception as e:
         response = {
             'statusCode': 500,

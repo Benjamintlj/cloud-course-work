@@ -184,6 +184,9 @@ def trip_mgr(app, lambda_client):
 
             if status_code == 200:
                 content = response_payload['body']
+            elif status_code == 404:
+                logging.error('Trips not found: ' + str(response_payload))
+                raise HTTPException(status_code=404, detail='Trips not found')
             else:
                 logging.error('error while getting trip returned non-201 response: ' + str(response_payload))
                 raise HTTPException(status_code=500, detail='Error while getting trip non-201 response')
@@ -215,6 +218,9 @@ def trip_mgr(app, lambda_client):
 
             if status_code == 200:
                 content = response_payload['body']['items']
+            elif status_code == 404:
+                logging.error('Trips not found: ' + str(response_payload))
+                raise HTTPException(status_code=404, detail='Trips not found')
             else:
                 logging.error('error while getting trip returned non-201 response: ' + str(response_payload))
                 raise HTTPException(status_code=500, detail='Error while getting trip non-201 response')
