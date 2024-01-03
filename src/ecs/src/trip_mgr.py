@@ -233,6 +233,41 @@ def trip_mgr(app, lambda_client):
 
         return JSONResponse(status_code=200, content=content)
 
+    @app.get('/trips-user-id')
+    async def get_trips_user_id(user_id=Depends(authenticate_request)):
+        content = None
+        print('made it here')
+
+        try:
+            payload = json.dumps({
+                'httpMethod': 'GET',
+                'action': 'get_all_trips_for_user_id',
+                'body': {
+                    'user_id': user_id
+                }
+            })
+
+            print('made it here')
+            response_payload = call_trip_mgr(lambda_client, payload)
+
+            print('made it here')
+            status_code = response_payload['statusCode']
+
+            if status_code == 200:
+                print('made it here')
+                content = response_payload['body']['items']
+            else:
+                logging.error('error while getting trip returned non-201 response: ' + str(response_payload))
+                raise HTTPException(status_code=500, detail='Error while getting trip non-201 response')
+
+        except HTTPException as http_exception:
+            raise http_exception
+        except Exception as e:
+            logging.error('invoking trip_mgr: ' + str(e))
+            raise HTTPException(status_code=500, detail=str(e))
+
+        return JSONResponse(status_code=200, content=content)
+
     @app.post('/user-wants-to-go-on-trip')
     async def user_wants_to_go_on_trip(request: UserWantsToGoOnTripRequest, user_id=Depends(authenticate_request)):
         content = None

@@ -39,8 +39,9 @@ export class AppStage extends cdk.Stage {
             tokenDynamoDbTable: storageStack.tokensDynamoDbTable,
             environmentVariables: {
                 'TRIP_MGR_ARN': tripMgrStack.lambdaFunction.functionArn,
-                'ACCOUNT_MGR_ARN': accountMgrStack.lambdaFunction.functionArn,
+                'USER_MGR_ARN': accountMgrStack.lambdaFunction.functionArn,
                 'TOKEN_DYNAMODB_TABLE': storageStack.tokensDynamoDbTable.tableName,
+                'AWS_DEFAULT_REGION': 'eu-west-1',
             },
             lambda_resources: [
                 tripMgrStack.lambdaFunction,

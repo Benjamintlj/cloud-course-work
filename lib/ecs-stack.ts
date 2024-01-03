@@ -6,6 +6,8 @@ import * as ecr from "aws-cdk-lib/aws-ecr";
 import * as DynamoDB from "aws-cdk-lib/aws-dynamodb";
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2'; // Import ELBv2 for Application Load Balancer
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as iam from 'aws-cdk-lib/aws-iam';
+
 
 interface EcsStackProps extends cdk.StackProps {
     vpc: ec2.Vpc;
@@ -37,6 +39,9 @@ export class EcsStack extends cdk.Stack {
 
         // Create a task definition and expose port 80
         const taskDefinition = new ecs.Ec2TaskDefinition(this, 'cloudCourseTaskDef');
+
+        // Add IAM permissions
+        taskDefinition.taskRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('SecretsManagerReadWrite'));
 
         // Create environment variables from props
         const environmentVariables: Record<string, string> = {};
