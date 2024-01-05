@@ -28,7 +28,7 @@ export class EcsStack extends cdk.Stack {
 
         // Add capacity to it
         cluster.addCapacity('cloudCourseAutoScalingGroupCapacity', {
-            instanceType: new ec2.InstanceType("t4g.nano"),
+            instanceType: new ec2.InstanceType("t4g.micro"),
             machineImage: ecs.EcsOptimizedImage.amazonLinux2(ecs.AmiHardwareType.ARM),
             desiredCapacity: 1,
             minCapacity: 1,
@@ -58,7 +58,7 @@ export class EcsStack extends cdk.Stack {
 
         container.addPortMappings({
             containerPort: 80,
-            hostPort: 80,
+            hostPort: 0,
             protocol: ecs.Protocol.TCP
         });
 
