@@ -6,11 +6,13 @@ from .weather_mgr import weather_mgr
 from .image_mgr import image_mgr
 from .utils import get_secrets
 
+region_name = 'eu-west-1'
+
 # Get secrets
-get_secrets()
+get_secrets(region_name)
 
 # Create client
-lambda_client = boto3.client('lambda', region_name='eu-west-1')
+lambda_client = boto3.client('lambda', region_name=region_name)
 
 # Init the app
 app = FastAPI()

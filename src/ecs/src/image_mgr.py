@@ -6,8 +6,23 @@ from .auth_route_dependency import authenticate_request
 
 
 def image_mgr(app, lambda_client):
+    """
+    Method that defines all image mgr method.
+    """
     @app.get('/image')
     async def get_image(location: str, user_id=Depends(authenticate_request)):
+        """
+        Gets an image for a location based on a location.
+
+        :param location: The name of the location.
+        :type location: str
+
+        :return: JPEG content of new photo.
+
+        :raises HTTPException: With status code 400 cannot get photo for the specified location.
+        :raises HTTPException: With status code 404 no photo available for the location.
+        """
+
         api_key = os.getenv('IMAGE_API_KEY')
 
         # Get the photo_id

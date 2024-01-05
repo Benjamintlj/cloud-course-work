@@ -1,15 +1,13 @@
 import secrets
 import boto3
-from boto3.dynamodb.conditions import Key
 import os
 from fastapi import HTTPException
 
 
-
+# PLEASE NOTE THIS IS A STANDARD PYTHON PATTERN
 class SingletonParentClass(type):
     _instances = {}
 
-    # standard singleton pattern
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
             cls._instances[cls] = super().__call__(*args, **kwargs)
@@ -22,6 +20,20 @@ class AuthTokenMgr(metaclass=SingletonParentClass):
         self.table = self.dynamodb.Table(os.environ['TOKEN_DYNAMODB_TABLE'])
 
     def is_token_valid(self, user_id, token):
+        """
+        Validates a user_id against a token.
+
+        :param user_id: User_id to check.
+        :type user_id: int
+        :param token: Auth token.
+        :type token: str
+
+        :return: True if token is valid.
+
+        :raises HTTPException: With status code 405 if the user id exists.
+        :raises HTTPException: With status code 500 for some kind of internal error.
+        """
+
         try:
             response = self.table.get_item(Key={'user_id': user_id})
         except Exception as e:
@@ -36,6 +48,17 @@ class AuthTokenMgr(metaclass=SingletonParentClass):
         return False
 
     def create_token(self, user_id):
+        """
+        Creates a new token for a certain user_id.
+
+        :param user_id: User_id the token is for.
+        :type user_id: int
+
+        :return: The new token.
+
+        :raises HTTPException: With status code 500 for some kind of internal error.
+        """
+
         new_token = secrets.token_hex(16)
         try:
             self.table.put_item(Item={'user_id': user_id, 'token': new_token})
@@ -44,6 +67,17 @@ class AuthTokenMgr(metaclass=SingletonParentClass):
         return new_token
 
     def remove_token(self, user_id):
+        """
+        Removes the token from the user_id.
+
+        :param user_id: User_id the token is for.
+        :type user_id: int
+
+        :return: True if successful.
+
+        :raises HTTPException: With status code 500 for some kind of internal error.
+        """
+
         try:
             response = self.table.delete_item(Key={'user_id': user_id})
         except Exception as e:

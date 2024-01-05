@@ -4,15 +4,16 @@ from .utils import email_exists, get_new_user_id, get_email_item
 
 def post_create_user(event, table):
     """
-    creates a new user
+    Creates a new user.
 
-    :param event: event passed to lambda
-    :param table: table containing the user accounts
-
-    :return: 201 if the creation of the user is successful,
-    400 if Email already exists,
-    500 for internal errors
+    :param event: Event passed to lambda.
+    :type event: dict
+    :param table: Table containing the user accounts.
+    :type table: dynamodb.Table
+    :returns: 201 if the creation of the user is successful, 400 if Email already exists, 500 for internal errors.
+    :rtype: dict
     """
+
     response = None
 
     email = event['body']['email']
@@ -42,11 +43,25 @@ def post_create_user(event, table):
             'statusCode': 201,
             'body': 'User created successfully'
         }
+
+    except ValueError as e:
+        response = {
+            'statusCode': 500,
+            'body': 'ValueError: ' + str(e)
+        }
+
+    except ConnectionError as e:
+        response = {
+            'statusCode': 500,
+            'body': 'ConnectionError: ' + str(e)
+        }
+
     except BotoCoreError as e:
         response = {
             'statusCode': 500,
             'body': 'BotoCoreError: ' + str(e)
         }
+
     except Exception as e:
         response = {
             'statusCode': 500,
@@ -58,16 +73,16 @@ def post_create_user(event, table):
 
 def post_login(event, table):
     """
-    validates if the user exists and if the credentials are correct
+    Validates if the user exists and if the credentials are correct.
 
-    :param event: event passed to lambda
-    :param table: table containing the user accounts
-
-    :return 200 & user_id, if login was successful,
-    404 if user is not found,
-    401 if password is incorrect,
-    500 for internal error
+    :param event: Event passed to lambda.
+    :type event: dict
+    :param table: Table containing the user accounts.
+    :type table: dynamodb.Table
+    :returns: 200 & user_id, if login was successful, 404 if user is not found, 401 if password is incorrect, 500 for internal error.
+    :rtype: dict
     """
+
     response = None
     account_entry = get_email_item(event['body']['email'], table)
 

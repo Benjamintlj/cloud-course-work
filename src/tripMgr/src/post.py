@@ -5,13 +5,14 @@ import boto3
 
 def create_trip(event, table):
     """
-    creates a new trip entry
+    Creates a new trip.
 
-    :param event: event passed to lambda
-    :param table: pointing to the trips table
-
-    :return 201 if create was successful
-    500 if create failed
+    :param event: Event passed to lambda.
+    :type event: dict
+    :param table: Table containing the trip.
+    :type table: dynamodb.Table
+    :return: 201 if the new trips is created successfully, 500 for any internal error.
+    :rtype: dict
     """
 
     response = None
@@ -51,6 +52,20 @@ def create_trip(event, table):
 
 
 def user_wants_to_go_on_trip(event, trip_table_name, user_table_name):
+    """
+    User gets added to the application column of the trip entry.
+
+    :param event: Event passed to lambda.
+    :type event: dict
+    :param trip_table_name: Name of the trip table.
+    :type trip_table_name: str
+    :param user_table_name: Name of the user table.
+    :type user_table_name: str
+    :return: 200 user application is successfully added, 400 entry fails to be added likely because user has
+    already applied, 500 for any internal error.
+    :rtype: dict
+    """
+
     response = None
 
     dynamodb_client = boto3.client('dynamodb')
@@ -109,6 +124,20 @@ def user_wants_to_go_on_trip(event, trip_table_name, user_table_name):
 
 
 def user_approval_request(event, trip_table_name, user_table_name):
+    """
+    Approve user from awaiting approval to approved columns.
+
+    :param event: Event passed to lambda.
+    :type event: dict
+    :param trip_table_name: Name of the trip table.
+    :type trip_table_name: str
+    :param user_table_name: Name of the user table.
+    :type user_table_name: str
+    :return: 200 user application is successfully moved, 400 the transaction failed likely because user already
+    exists in eather column, 500 for any internal error.
+    :rtype: dict
+    """
+
     response = None
     dynamodb_client = boto3.client('dynamodb')
 
@@ -171,6 +200,18 @@ def user_approval_request(event, trip_table_name, user_table_name):
 
 
 def remove_user_application(event, trip_table_name, user_table_name):
+    """
+    Removes user from awaiting approval and approved columns.
+
+    :param event: Event passed to lambda.
+    :type event: dict
+    :param trip_table_name: Name of the trip table.
+    :type trip_table_name: str
+    :param user_table_name: Name of the user table.
+    :type user_table_name: str
+    :return: 200 if the user application is successfully moved.
+    :rtype: dict
+    """
 
     user_id = str(event['body']['user_id'])
     trip_id = str(event['body']['trip_id'])

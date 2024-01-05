@@ -2,7 +2,19 @@ from .utils import remove_element_from_list
 from botocore.exceptions import ClientError
 
 
-def delete_trip(event, trips_table, trip_table_name, user_table_name):
+def delete_trip(event, trips_table, user_table_name):
+    """
+    Takes the response from dynamodb that specifies the types, and converts it into a standard python dict.
+
+    :param event: Event passed to lambda.
+    :type event: dict
+    :param trips_table: The trips table client.
+    :type trips_table: dynamodb.Table
+    :param user_table_name: The name of the user table.
+    :type user_table_name: str
+    :return: 200 if removal was successful, 400 if the transaction failed, 500 for any internal error.
+    :rtype: dict
+    """
 
     response = None
 

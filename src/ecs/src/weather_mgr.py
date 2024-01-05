@@ -7,6 +7,24 @@ from .utils import convert_unix_to_datetime
 
 
 def get_weather(location, start_date, end_date, is_historical):
+    """
+    Calls the weather api.
+
+    :param location: The location of interest.
+    :type location: str
+    :param start_date: The start of the date range.
+    :type start_date: int
+    :param end_date: The end of the date range.
+    :type end_date: int
+    :param is_historical: Is the date range in the past (True).
+    :type is_historical: bool
+    :return: A JSONResponse containing the temperature and weather description for the middle of the date range.
+            204 will be returned if there is no content, else 200.
+    :rtype: JSONResponse
+
+    :raises HTTPException: With status code 500 in an internal error occurred.
+    """
+
     response = None
 
     start_date_str = convert_unix_to_datetime(start_date)
@@ -50,10 +68,39 @@ def get_weather(location, start_date, end_date, is_historical):
 
 
 def weather_mgr(app, lambda_client):
+    """
+    Method that defines all weather mgr methods.
+    """
     @app.get('/weather-forecast')
     async def get_weather_forcast(location: str, start_date: int, end_date: int, user_id=Depends(authenticate_request)):
+        """
+        Get gets the weather forcast (future weather data).
+
+        :param location: The location of interest.
+        :type location: str
+        :param start_date: The start of the date range.
+        :type start_date: int
+        :param end_date: The end of the date range.
+        :type end_date: int
+        :return: A JSONResponse containing the temperature and weather description for the middle of the date range.
+                204 will be returned if there is no content, else 200.
+        :rtype: JSONResponse
+        """
         return get_weather(location, start_date, end_date, False)
 
     @app.get('/weather-history')
     async def get_weather_history(location: str, start_date: int, end_date: int, user_id=Depends(authenticate_request)):
+        """
+        Get gets the weather history (past weather data).
+
+        :param location: The location of interest.
+        :type location: str
+        :param start_date: The start of the date range.
+        :type start_date: int
+        :param end_date: The end of the date range.
+        :type end_date: int
+        :return: A JSONResponse containing the temperature and weather description for the middle of the date range.
+                204 will be returned if there is no content, else 200.
+        :rtype: JSONResponse
+        """
         return get_weather(location, start_date, end_date, True)

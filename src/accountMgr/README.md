@@ -1,19 +1,16 @@
 # Account Mgr Lambda
-
-### How to run the project locally
-
-
-### How to test the project locally with moto
-
+Creates and manages accounts in the accounts dynamodb table.
 
 ### Create the environment
-
+1. Create a `venv` directory
+2. Create a new interpreter in PyCharm with python 3.9 and link it to the `venv` directory
+3. Link requirements.txt to pycharm in Settings > Tools > Python Integrated Tools
+4. Install the dependencies from requirements.txt
 
 ### Update the environment 
 ```bash
 pip freeze > requirements.txt
 ```
-
 
 ### Prepare and push zip lambda to s3
 Note: you will manually have to install any updates or new packages to package with

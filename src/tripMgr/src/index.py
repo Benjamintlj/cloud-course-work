@@ -6,6 +6,9 @@ import os
 
 
 def main(event, context):
+    """
+    Main event handler, this method directs events to the correct functions based on a action and httpMethod.
+    """
     # get DYNAMO_TABLE from environment variable
     dynamodb_resource = boto3.resource('dynamodb')
     TRIPS_DYNAMO_TABLE = os.environ['TRIPS_DYNAMODB_TABLE']
@@ -32,7 +35,7 @@ def main(event, context):
             response = get_all_trips(trips_table)
 
         elif action == 'get_all_trips_for_user_id':
-            response = get_all_trips_for_user_id(event, user_table, trips_table)
+            response = get_all_trips_for_user_id(event, user_table, TRIPS_DYNAMO_TABLE)
 
     elif http_method == 'POST':
         if action == 'create_trip':
@@ -49,7 +52,7 @@ def main(event, context):
 
     elif http_method == 'DELETE':
         if action == 'delete_trip':
-            response = delete_trip(event, trips_table, TRIPS_DYNAMO_TABLE, USERS_DYNAMODB_TABLE)
+            response = delete_trip(event, trips_table, USERS_DYNAMODB_TABLE)
 
     return response if response else {
         'statusCode': 400,

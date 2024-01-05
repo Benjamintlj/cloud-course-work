@@ -9,6 +9,17 @@ from botocore.exceptions import ClientError
 
 
 def handle_lambda_response(lambda_response):
+    """
+    Checks a lambdas response to ensure that it worked correctly.
+
+    :param lambda_response: The raw response from the lambda called.
+    :type lambda_response: dict
+    :return: The response payload from the lambda.
+    :rtype: dict
+
+    :raises HTTPException: With status code 502 if the lambda fails unexpectedly.
+    """
+
     if lambda_response['ResponseMetadata']['HTTPStatusCode'] != 200:
         logging.error('lambda returned non-200 response: ' + str(lambda_response))
         raise HTTPException(status_code=502, detail='Error lambda returned non-200 response')
@@ -20,6 +31,19 @@ def handle_lambda_response(lambda_response):
 
 
 def call_account_mgr(lambda_client, payload):
+    """
+    Calls the account_mgr lambda with the given payload.
+
+    :param lambda_client: The lambda client.
+    :type lambda_client: boto3.client
+    :param payload: Payload to send to the lambda.
+    :type payload: dict
+    :return: The response payload from the lambda with any other details abstracted away.
+    :rtype: dict
+
+    :raises HTTPException: With status code 502 if the lambda fails unexpectedly.
+    """
+
     lambda_response = lambda_client.invoke(
         FunctionName=os.getenv('USER_MGR_ARN'),
         InvocationType='RequestResponse',
@@ -30,6 +54,19 @@ def call_account_mgr(lambda_client, payload):
 
 
 def call_trip_mgr(lambda_client, payload):
+    """
+    Calls the trip_mgr lambda with the given payload.
+
+    :param lambda_client: The lambda client.
+    :type lambda_client: boto3.client
+    :param payload: Payload to send to the lambda.
+    :type payload: dict
+    :return: The response payload from the lambda with any other details abstracted away.
+    :rtype: dict
+
+    :raises HTTPException: With status code 502 if the lambda fails unexpectedly.
+    """
+
     lambda_response = lambda_client.invoke(
         FunctionName=os.getenv('TRIP_MGR_ARN'),
         InvocationType='RequestResponse',
@@ -40,16 +77,29 @@ def call_trip_mgr(lambda_client, payload):
 
 
 def convert_unix_to_datetime(unix_time):
+    """
+    Takes the unix time and converts it into the format desired by the weather api.
+
+    :param unix_time: The unix time to convert.
+    :type unix_time: int
+    :return: The unix time converted to the desired format.
+    :rtype: str
+    """
     return datetime.utcfromtimestamp(unix_time).strftime('%Y-%m-%d:%H')
 
 
-def convert_datetime_to_unix(dt):
-    return int(time.mktime(dt.timetuple()))
+def get_secrets(region_name):
+    """
+    Sets the environment variables `WEATHER_API_KEY` & `IMAGE_API_KEY`, so that they can be used
+    on the external api managers.
 
+    :param region_name: The region the secrets are located in.
+    :type region_name: str
 
-def get_secrets():
+    :return: None
+    """
+
     secret_name = "cloudCourseWork"
-    region_name = "eu-west-1"
 
     session = boto3.session.Session()
     client = session.client(

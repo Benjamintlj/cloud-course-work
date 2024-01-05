@@ -3,14 +3,14 @@ from botocore.exceptions import BotoCoreError
 
 def get_email(event, table):
     """
-    gets the email for a given user_id
+    Gets the email for a given user_id.
 
-    :param event: event passed to lambda
-    :param table: table containing the user accounts
-
-    :return: 200 if user_id was found,
-    404 if user_id was not found,
-    500 for any internal error
+    :param event: Event passed to lambda.
+    :type event: dict
+    :param table: Table containing the user accounts.
+    :type table: dynamodb.Table
+    :return: 200 if user_id was found, 404 if user_id was not found, 500 for any internal error.
+    :rtype: dict
     """
     response = None
 

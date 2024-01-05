@@ -40,6 +40,20 @@ class DeleteTripRequest(BaseModel):
 
 
 def verify_current_user_is_admin(user_id, trip_id, lambda_client):
+    """
+    Throws 401 if the current user is not the admin of the specified trip, otherwise there are no external interactions.
+
+    :param user_id: User ID of the user making the request.
+    :type user_id: int
+    :param trip_id: ID of trip in question.
+    :type trip_id: int
+    :param lambda_client: The lambda client.
+    :type lambda_client: boto3.client
+    :return: None
+
+    :raises HTTPException: With status code 401 if the current user is not admin of specified trip.
+    :raises HTTPException: With status code 502 if the lambda fails unexpectedly.
+    """
     verify_payload = json.dumps({
         'httpMethod': 'GET',
         'action': 'get_trip_info_by_id',
@@ -56,8 +70,22 @@ def verify_current_user_is_admin(user_id, trip_id, lambda_client):
 
 
 def trip_mgr(app, lambda_client):
+    """
+    Method that defines all trip mgr methods.
+    """
     @app.post('/trip')
     async def create_trip(request: CreateTripRequest, user_id=Depends(authenticate_request)):
+        """
+        Creates a new trip.
+
+        :param request: Is the body containing relevant data.
+        :return: None
+
+        :raises HTTPException: With status code 400 if the proposed dates are invalid.
+        :raises HTTPException: With status code 500 in an internal error occurred.
+        :raises HTTPException: With status code 502 if the lambda fails unexpectedly.
+        """
+
         content = None
 
         try:
@@ -104,6 +132,18 @@ def trip_mgr(app, lambda_client):
 
     @app.delete('/trip')
     async def delete_trip(request: DeleteTripRequest, user_id=Depends(authenticate_request)):
+        """
+        Deletes an existing trip.
+
+        :param request: Is the body containing relevant data.
+        :return: None
+
+        :raises HTTPException: With status code 400 if the delete transaction failed.
+        :raises HTTPException: With status code 401 if the current user is not admin of specified trip.
+        :raises HTTPException: With status code 500 in an internal error occurred.
+        :raises HTTPException: With status code 502 if the lambda fails unexpectedly.
+        """
+
         content = None
 
         try:
@@ -124,8 +164,7 @@ def trip_mgr(app, lambda_client):
             if status_code == 200:
                 pass
             elif status_code == 400:
-                HTTPException(status_code=400,
-                              detail='Transaction failed')
+                HTTPException(status_code=400, detail='Transaction failed')
             else:
                 logging.error('error while deleting trip returned non-201 response: ' + str(response_payload))
                 raise HTTPException(status_code=500, detail='Error while deleting trip non-201 response')
@@ -143,6 +182,22 @@ def trip_mgr(app, lambda_client):
                         location: Optional[str] = None,
                         admin_id: Optional[int] = None,
                         user_id=Depends(authenticate_request)):
+        """
+        Gets a trip by a specified parameter in the url. If no parameter is specified all trips will be returned.
+
+        :param trip_id: (Optional) gets the trip by trip_id.
+        :type trip_id: int
+        :param location: (Optional) gets the trip by location.
+        :type location: str
+        :param admin_id: (Optional) gets the trip by admin_id.
+        :type admin_id: int
+        :return: Within the body an Item or Items array containing the trip/s.
+
+        :raises HTTPException: With status code 404 if no trip matching the description is found.
+        :raises HTTPException: With status code 500 in an internal error occurred.
+        :raises HTTPException: With status code 502 if the lambda fails unexpectedly.
+        """
+
         content = None
 
         try:
@@ -201,6 +256,16 @@ def trip_mgr(app, lambda_client):
 
     @app.get('/trips-user-id')
     async def get_trips_user_id(user_id=Depends(authenticate_request)):
+        """
+        Gets a trip by the user_id specified in the headers.
+
+        :return: Within the body an Item or Items array containing the trip/s.
+
+        :raises HTTPException: With status code 404 if no trip matching the description is found.
+        :raises HTTPException: With status code 500 in an internal error occurred.
+        :raises HTTPException: With status code 502 if the lambda fails unexpectedly.
+        """
+
         content = None
 
         try:
@@ -233,43 +298,19 @@ def trip_mgr(app, lambda_client):
 
         return JSONResponse(status_code=200, content=content)
 
-    @app.get('/trips-user-id')
-    async def get_trips_user_id(user_id=Depends(authenticate_request)):
-        content = None
-        print('made it here')
-
-        try:
-            payload = json.dumps({
-                'httpMethod': 'GET',
-                'action': 'get_all_trips_for_user_id',
-                'body': {
-                    'user_id': user_id
-                }
-            })
-
-            print('made it here')
-            response_payload = call_trip_mgr(lambda_client, payload)
-
-            print('made it here')
-            status_code = response_payload['statusCode']
-
-            if status_code == 200:
-                print('made it here')
-                content = response_payload['body']['items']
-            else:
-                logging.error('error while getting trip returned non-201 response: ' + str(response_payload))
-                raise HTTPException(status_code=500, detail='Error while getting trip non-201 response')
-
-        except HTTPException as http_exception:
-            raise http_exception
-        except Exception as e:
-            logging.error('invoking trip_mgr: ' + str(e))
-            raise HTTPException(status_code=500, detail=str(e))
-
-        return JSONResponse(status_code=200, content=content)
-
     @app.post('/user-wants-to-go-on-trip')
     async def user_wants_to_go_on_trip(request: UserWantsToGoOnTripRequest, user_id=Depends(authenticate_request)):
+        """
+        User specifies a trip that they would like to apply for.
+
+        :return: None
+
+        :raises HTTPException: With status code 400 the transaction failed,
+                               commonly caused by a user already in the application process.
+        :raises HTTPException: With status code 500 in an internal error occurred.
+        :raises HTTPException: With status code 502 if the lambda fails unexpectedly.
+        """
+
         content = None
 
         try:
@@ -305,6 +346,17 @@ def trip_mgr(app, lambda_client):
 
     @app.post('/user-approval')
     async def user_approval(request: UserApproval, user_id=Depends(authenticate_request)):
+        """
+        Admin of a trip approves a user for a trip.
+
+        :return: None
+
+        :raises HTTPException: With status code 400 the transaction failed.
+        :raises HTTPException: With status code 401 if the current user is not admin of specified trip.
+        :raises HTTPException: With status code 500 in an internal error occurred.
+        :raises HTTPException: With status code 502 if the lambda fails unexpectedly.
+        """
+
         content = None
 
         try:
@@ -327,8 +379,7 @@ def trip_mgr(app, lambda_client):
             if status_code == 200:
                 pass
             elif status_code == 400:
-                HTTPException(status_code=400,
-                              detail='Transaction failed')
+                HTTPException(status_code=400, detail='Transaction failed')
             else:
                 logging.error('error while updating trip returned non-201 response: ' + str(response_payload))
                 raise HTTPException(status_code=500, detail='Error while getting trip non-201 response')
@@ -343,6 +394,15 @@ def trip_mgr(app, lambda_client):
 
     @app.post('/user-no-longer-wants-to-attend')
     async def user_no_longer_wants_to_attend(request: UserNoLongerWantsToAttend, user_id=Depends(authenticate_request)):
+        """
+        User that has applied for a trip can resign from it, this works if they have been approved or not.
+
+        :return: None
+
+        :raises HTTPException: With status code 500 in an internal error occurred.
+        :raises HTTPException: With status code 502 if the lambda fails unexpectedly.
+        """
+
         content = None
 
         try:
@@ -375,6 +435,15 @@ def trip_mgr(app, lambda_client):
 
     @app.post('/user-denied')
     async def user_no_longer_wants_to_attend(request: UserDenied, admin_id=Depends(authenticate_request)):
+        """
+        Admin can deny a user from being apart of a trip, even after being approved.
+
+        :return: None
+
+        :raises HTTPException: With status code 401 the current user must be the admin of the trip to remove the user.
+        :raises HTTPException: With status code 500 in an internal error occurred.
+        :raises HTTPException: With status code 502 if the lambda fails unexpectedly.
+        """
         content = None
 
         try:

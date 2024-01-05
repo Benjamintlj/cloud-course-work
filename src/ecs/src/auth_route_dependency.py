@@ -3,6 +3,12 @@ from fastapi import Header, HTTPException, Depends, Request
 
 
 def authenticate_request(request: Request):
+    """
+    Authenticates any request that depends on this method returning user_id.
+    Example signature: def func_name(user_id=Depends(authenticate_request)):
+
+    :return: user_id of the requester.
+    """
     headers = request.headers
 
     user_id = int(headers.get('User-Id'))

@@ -47,7 +47,6 @@ class TestUtils(unittest.TestCase):
 
         assert response is True
 
-    # TODO: email and password should be in vars
     @patch('boto3.resource')
     def test_get_email_item(self, mock_boto3_resource):
         # returns no item key

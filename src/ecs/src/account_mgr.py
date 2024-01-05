@@ -23,16 +23,20 @@ class SignOutRequest(BaseModel):
 
 
 def account_mgr(app, lambda_client):
+    """
+    Method that defines all account mgr methods.
+    """
     @app.post('/account')
     def create_account(request: CreateAccountRequest):
         """
-        creates an account
+        Creates an account.
 
-        :param request: is the body containing the email and password as strings
+        :param request: Is the body containing the email and password as strings.
+        :return: None
 
-        :return: 201 if the creation of the user is successful,
-        400 if Email already exists,
-        500 for internal errors
+        :raises HTTPException: With status code 400 if username already exists.
+        :raises HTTPException: With status code 500 in an internal error occurred.
+        :raises HTTPException: With status code 502 if the lambda fails unexpectedly.
         """
         email = request.email
         password = request.password
@@ -71,11 +75,20 @@ def account_mgr(app, lambda_client):
 
     @app.post('/login')
     def login(request: LoginRequest):
+        """
+        Signs the user in.
+
+        :param request: Is the body containing the email and password as strings.
+        :return: An auth token to be used in each subsequent request.
+
+        :raises HTTPException: With status code 401 if password was incorrect.
+        :raises HTTPException: With status code 404 if username was not found.
+        :raises HTTPException: With status code 500 in an internal error occurred.
+        :raises HTTPException: With status code 502 if the lambda fails unexpectedly.
+        """
+
         email = request.email
         password = request.password
-
-        print(email)
-        print(password)
 
         content = None
 
@@ -122,6 +135,15 @@ def account_mgr(app, lambda_client):
 
     @app.post('/sign-out')
     async def sign_out(user_id=Depends(authenticate_request)):
+        """
+        Signs the user out.
+
+        :return: None
+
+        :raises HTTPException: With status code 500 in an internal error occurred.
+        :raises HTTPException: With status code 502 if the lambda fails unexpectedly.
+        """
+
         content = None
 
         is_user_removed = AuthTokenMgr().remove_token(user_id)
@@ -134,6 +156,19 @@ def account_mgr(app, lambda_client):
 
     @app.get('/email')
     async def get_email(user_id_of_email: int, user_id=Depends(authenticate_request)):
+        """
+        Returns the email for a specific user_id.
+
+        :param user_id_of_email: User id of the desired email.
+        :type: int
+
+        :return: The email.
+
+        :raises HTTPException: With status code 404 if the user_id is unknown.
+        :raises HTTPException: With status code 500 in an internal error occurred.
+        :raises HTTPException: With status code 502 if the lambda fails unexpectedly.
+        """
+
         content = None
 
         try:

@@ -5,6 +5,9 @@ import os
 
 
 def main(event, context):
+    """
+    Main event handler, this method directs events to the correct functions based on a action and httpMethod.
+    """
     # create dynamodb resource
     DYNAMO_TABLE = os.environ['USERS_DYNAMODB_TABLE']
     dynamodb = boto3.resource('dynamodb')
