@@ -146,6 +146,70 @@ def pop_user_id_cache(table):
     return user_id
 
 
+def call_csrng(csrng_url):
+    """
+    Calls the csrng url.
+
+    :param csrng_url: The url to call.
+    :type csrng_url: str
+    :return: A random number.
+    :rtype: int
+
+    :raises ValueError: If the API fails to respond correctly.
+    """
+    response = requests.get(csrng_url)
+    data = response.json()
+
+    if data[0]['status'] != 'success':
+        raise ValueError('API response status is not success')
+
+    return data[0]['random']
+
+
+def call_random_number_api(random_number_api_url):
+    """
+    Calls the random number api url.
+
+    :param random_number_api_url: The url to call.
+    :type random_number_api_url: str
+    :return: A random number.
+    :rtype: int
+
+    :raises ValueError: If the API fails to respond correctly.
+    """
+    response = requests.get(random_number_api_url)
+    data = response.json()
+
+    if not data:
+        raise ValueError('API response is empty')
+
+    return data[0]
+
+
+def get_random_number():
+    """
+    Calls both of the random number apis, if one fails it calls the other, if both fail an exception is thrown.
+
+    :return: A random number.
+    :rtype: int
+
+    :raises ValueError: If both APIs fail to respond correctly.
+    """
+    random_min = 100000000000
+    random_max = 999999999999
+    csrng_url = f'https://csrng.net/csrng/csrng.php?min={random_min}&max={random_max}'
+    random_number_api_url = f'https://www.randomnumberapi.com/api/v1.0/random?min={random_min}&max={random_max}&count=1'
+
+    try:
+        user_id = call_csrng(csrng_url)
+    except ValueError:
+        try:
+            user_id = call_random_number_api(random_number_api_url)
+        except ValueError as e:
+            raise ValueError('Error processing API response: ' + str(e))
+    return user_id
+
+
 def generate_cached_user_id(table):
     """
     Generates a new user_id between 100000000000 & 999999999999, the user_id is guaranteed to not clash with existing
@@ -160,20 +224,10 @@ def generate_cached_user_id(table):
     :raises BotoCoreError: if an issue occurs while adding the user_id to the FILO. Please note that checks happen
     during this stage, so they can also raise the exception.
     """
-
-    random_min = 100000000000
-    random_max = 999999999999
-    url = f'https://csrng.net/csrng/csrng.php?min={random_min}&max={random_max}'
-    cached_user_id_entry = 0
+    cached_user_id_entry = 0  # WARNING: DO NOT CHANGE THIS LINE OF CODE IT IS CRITICAL!
 
     try:
-        response = requests.get(url)
-        data = response.json()
-
-        if data[0]['status'] != 'success':
-            raise ValueError('API response status is not success')
-
-        user_id = data[0]['random']
+        user_id = get_random_number()
 
         if not user_id_exists(user_id, table):
             table.update_item(
@@ -192,11 +246,11 @@ def generate_cached_user_id(table):
     except BotoCoreError as e:
         raise e
 
+    except ValueError as e:
+        raise e
+
     except requests.exceptions.RequestException as e:
         raise ConnectionError('Failed to establish a new connection: ' + str(e))
-
-    except ValueError as e:
-        raise ValueError('Error processing API response: ' + str(e))
 
     return True
 
@@ -235,41 +289,36 @@ def get_new_user_id(table):
     :returns: A new user_id that does not clash with the existing user_ids.
     :rtype: int
     :raises BotoCoreError: if an exception is thrown while interacting with DynamoDB.
-    :raises ValueError: if API response cannot be parsed.
-    :raises ConnectionError: if function cannot connect to API.
     :raises Exception: if after multiple attempts to create new user_id fail.
     """
-
-    random_min = 0
-    random_max = 100000000000
-    url = f'https://csrng.net/csrng/csrng.php?min={random_min}&max={random_max}'
     attempts = 0
 
     if length_of_cached_user_ids(table) < 5:
         # this function can raise a ValueError or ConnectionError
-        generate_cached_user_id(table)
+        try:
+            generate_cached_user_id(table)
+        except Exception as e:
+            # failed to cache more ids
+            pass
 
     while attempts < 3:
         try:
-            response = requests.get(url)
-            data = response.json()
-
-            if data[0]['status'] != 'success':
-                raise ValueError('API response status is not success')
-
-            user_id = data[0]['random']
+            user_id = get_random_number()
 
             if not user_id_exists(user_id, table):
                 return user_id
 
-        except requests.exceptions.RequestException as e:
-            # handle a bad connection
-            return pop_user_id_cache(table)
+        except ValueError as ignore:
+            pass
 
-        except ValueError as e:
-            raise ValueError(f'Error processing API response: {e}')
+        except Exception as ignore:
+            pass
 
         finally:
             attempts += 1
 
-    raise Exception('Error cannot create a new user_id')
+    try:
+        # worst case get from cache
+        return pop_user_id_cache(table)
+    except Exception as ignore:
+        raise Exception('Error cannot create a new user_id')
