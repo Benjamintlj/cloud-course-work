@@ -19,6 +19,7 @@ It will be running on [localhost:4003](http://localhost:4003/).
 ### Run the project locally and not inside a container
 Prerequisite: you must have the environment set up and be singed in to aws cli.
 ```bash
+export FAILED_REQUEST_SQS_QUEUE="https://sqs.eu-west-1.amazonaws.com/203163753194/prod-CloudCourseWorkFailedRequest-CloudCourseWorkFailedRequestMgrSQ-LJerBDUtL5wr"
 export TRIP_MGR_ARN="arn:aws:lambda:eu-west-1:203163753194:function:prod-CloudCourseWorkTripM-CloudCourseWorkTripMgr2C-eLL8llBozOko"
 export USER_MGR_ARN="arn:aws:lambda:eu-west-1:203163753194:function:prod-CloudCourseWorkAccou-CloudCourseWorkAccountMg-hUGTc4n0SnjO"
 export TOKEN_DYNAMODB_TABLE="prod-CloudCourseWorkStorageStack-cloudCourseWorkTokensDynamoDbTableE313728A-SV35MP511AZK"

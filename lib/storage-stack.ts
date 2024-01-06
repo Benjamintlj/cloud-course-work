@@ -8,6 +8,7 @@ export class StorageStack extends cdk.Stack {
     readonly usersDynamoDbTable: DynamoDB.Table;
     readonly tripsDynamoDbTable: DynamoDB.Table;
     readonly tokensDynamoDbTable: DynamoDB.Table;
+    readonly failedRequestDynamoDbTable: DynamoDB.Table;
     readonly lambdaBucket: S3.IBucket;
 
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -66,6 +67,13 @@ export class StorageStack extends cdk.Stack {
         this.tokensDynamoDbTable = new DynamoDB.Table(this, 'cloudCourseWorkTokensDynamoDbTable', {
             partitionKey: {
                 name: 'user_id',
+                type: DynamoDB.AttributeType.NUMBER
+            }
+        });
+
+        this.failedRequestDynamoDbTable = new DynamoDB.Table(this, 'cloudCourseWorkFailedRequestsDynamoDbTable', {
+            partitionKey: {
+                name: 'request_id',
                 type: DynamoDB.AttributeType.NUMBER
             }
         });

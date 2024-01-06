@@ -4,6 +4,7 @@ import {EcsStack} from "./ecs-stack";
 import {VpcStack} from "./vpc-stack";
 import {genericLambdaStack} from "./generic-lambda-stack";
 import {StorageStack} from "./storage-stack";
+import {LambdaAndSqsStack} from "./lambda-and-sqs-stack";
 
 
 export class AppStage extends cdk.Stage {
@@ -33,6 +34,13 @@ export class AppStage extends cdk.Stage {
             tripsDynamodbTable: storageStack.tripsDynamoDbTable,
         });
 
+        const failedRequestStack = new LambdaAndSqsStack(this, 'CloudCourseWorkFailedRequestStack', {
+            name: 'CloudCourseWorkFailedRequestMgr',
+            s3Bucket: storageStack.lambdaBucket,
+            s3Key: 'failedRequestMgr.zip',
+            failedRequestsDynamodbTable: storageStack.failedRequestDynamoDbTable,
+        });
+
         // create ecs, load balancer, and auto-scaling cluster
         const ecsStack = new EcsStack(this, 'CloudCourseWorkEcsStack', {
             vpc: vpcStack.vpc,
@@ -41,12 +49,14 @@ export class AppStage extends cdk.Stage {
                 'TRIP_MGR_ARN': tripMgrStack.lambdaFunction.functionArn,
                 'USER_MGR_ARN': accountMgrStack.lambdaFunction.functionArn,
                 'TOKEN_DYNAMODB_TABLE': storageStack.tokensDynamoDbTable.tableName,
+                'FAILED_REQUEST_SQS_QUEUE': failedRequestStack.sqsQueue.queueUrl,
                 'AWS_DEFAULT_REGION': 'eu-west-1',
             },
             lambda_resources: [
                 tripMgrStack.lambdaFunction,
                 accountMgrStack.lambdaFunction
-            ]
+            ],
+            failedRequestsSQSQueue: failedRequestStack.sqsQueue,
         });
     }
 }

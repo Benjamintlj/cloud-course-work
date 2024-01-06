@@ -20,13 +20,6 @@ export class genericLambdaStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props: LambdaStackProps) {
         super(scope, id, props);
 
-        // create sqs that the lambda can write to
-        const sqsName = props.name + 'Dlq';
-
-        const dlq = new Sqs.Queue(this, sqsName, {
-            queueName: sqsName,
-        });
-
         // create lambda
         this.lambdaFunction = new lambda.Function(this, props.name, {
             runtime: lambda.Runtime.PYTHON_3_9,
@@ -37,12 +30,8 @@ export class genericLambdaStack extends cdk.Stack {
             environment: {
                 'USERS_DYNAMODB_TABLE': props.usersDynamodbTable ? props.usersDynamodbTable.tableName : '',
                 'TRIPS_DYNAMODB_TABLE': props.tripsDynamodbTable ? props.tripsDynamodbTable.tableName : '',
-                'DLQ_QUEUE_URL': dlq.queueUrl,
             }
         });
-
-        // grant lambda send message access to sqs
-        dlq.grantSendMessages(this.lambdaFunction);
 
         // grant lambda read/write access to dynamodb
         if (props.usersDynamodbTable) {

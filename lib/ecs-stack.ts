@@ -7,6 +7,7 @@ import * as DynamoDB from "aws-cdk-lib/aws-dynamodb";
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2'; // Import ELBv2 for Application Load Balancer
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as sqs from "aws-cdk-lib/aws-sqs";
 
 
 interface EcsStackProps extends cdk.StackProps {
@@ -14,6 +15,7 @@ interface EcsStackProps extends cdk.StackProps {
     environmentVariables: { [key: string]: string };
     lambda_resources: lambda.Function[];
     tokenDynamoDbTable: DynamoDB.Table;
+    failedRequestsSQSQueue: sqs.Queue;
 }
 
 export class EcsStack extends cdk.Stack {
@@ -85,5 +87,8 @@ export class EcsStack extends cdk.Stack {
         }
 
         props.tokenDynamoDbTable.grantReadWriteData(taskDefinition.taskRole);
+
+        // Grant write permissions to SQS
+        props.failedRequestsSQSQueue.grantSendMessages(taskDefinition.taskRole);
     }
 }

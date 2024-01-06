@@ -118,3 +118,41 @@ def get_secrets(region_name):
 
     os.environ['WEATHER_API_KEY'] = secrets['WEATHER_API_KEY']
     os.environ['IMAGE_API_KEY'] = secrets['IMAGE_API_KEY']
+
+
+def send_message_to_sqs(request, exception):
+    """
+    Sends failed requests to failed request mgr
+
+    :param request: The request sent to ecs.
+    :type request: Request
+    :param exception: The response made by ecs.
+    :type exception: HTTPException
+
+    :return: None
+    """
+
+    sqs = boto3.client('sqs')
+    queue_url = os.environ.get('FAILED_REQUEST_SQS_QUEUE')
+
+    request_dict = {
+        'method': request.method,
+        'url': str(request.url),
+        'headers': dict(request.headers),
+    }
+
+    payload = json.dumps({
+        'status_code': exception.status_code,
+        'description': exception.detail,
+        'request': request_dict
+    })
+
+    try:
+        response = sqs.send_message(
+            QueueUrl=queue_url,
+            MessageBody=payload
+        )
+        print(response)
+    except Exception as ignore:
+        print('exception: ' + str(ignore))
+        pass
