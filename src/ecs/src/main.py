@@ -5,6 +5,7 @@ from .trip_mgr import trip_mgr
 from .weather_mgr import weather_mgr
 from .image_mgr import image_mgr
 from .utils import get_secrets
+from .health import health
 
 region_name = 'eu-west-1'
 
@@ -18,6 +19,8 @@ lambda_client = boto3.client('lambda', region_name=region_name)
 app = FastAPI()
 
 # Set endpoints
+health(app)
+
 account_mgr(app, lambda_client)
 
 trip_mgr(app, lambda_client)
